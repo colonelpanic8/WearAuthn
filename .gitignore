@@ -22,3 +22,5 @@
 /companion/build
 /companion/release
 .kotlintest
+.direnv/
+.worktrees/
