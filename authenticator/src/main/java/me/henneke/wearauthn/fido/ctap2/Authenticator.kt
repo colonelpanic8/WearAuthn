@@ -573,6 +573,8 @@ object Authenticator : Logging {
                 GET_INFO_RESPONSE_AAGUID to CborByteString(BASIC_ATTESTATION_AAGUID),
                 GET_INFO_RESPONSE_OPTIONS to CborTextStringMap(optionsMap),
                 GET_INFO_RESPONSE_MAX_MSG_SIZE to CborLong(MAX_CBOR_MSG_SIZE),
+                // Clients need this to run the ClientPIN key agreement that hmac-secret uses.
+                GET_INFO_RESPONSE_PIN_PROTOCOLS to CborArray(arrayOf(CborLong(1))),
                 // This value is chosen such that most credential lists will fit into a single
                 // request while still staying well below the maximal message size when taking
                 // the maximal credential ID length into account.
