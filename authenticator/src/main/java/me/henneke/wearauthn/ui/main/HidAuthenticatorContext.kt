@@ -1,6 +1,7 @@
 package me.henneke.wearauthn.ui.main
 
 import android.app.Activity
+import android.content.Context
 import android.content.DialogInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -16,8 +17,13 @@ import me.henneke.wearauthn.ui.TimedAcceptDenyDialog
 import kotlin.coroutines.resume
 
 @ExperimentalUnsignedTypes
-class HidAuthenticatorContext(private val activity: Activity) :
-    AuthenticatorContext(activity, isHidTransport = true) {
+class HidAuthenticatorContext(
+    context: Context,
+    private val obtainActivity: suspend () -> Activity,
+    private val releaseActivity: suspend () -> Unit = {},
+) : AuthenticatorContext(context, isHidTransport = true) {
+
+    override suspend fun dialogContext(): Context = obtainActivity()
     override fun notifyUser(info: RequestInfo) {
         // No-op for HID transport since we already asked for confirmation during
         // confirmWithUser
@@ -35,6 +41,7 @@ class HidAuthenticatorContext(private val activity: Activity) :
     override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean? {
         return try {
             status = AuthenticatorStatus.WAITING_FOR_UP
+            val activity = obtainActivity()
             withContext(Dispatchers.Main) {
                 val dialog =
                     TimedAcceptDenyDialog(activity).apply {
@@ -57,6 +64,7 @@ class HidAuthenticatorContext(private val activity: Activity) :
                 }
             }
         } finally {
+            releaseActivity()
             status = AuthenticatorStatus.PROCESSING
         }
     }
@@ -64,6 +72,7 @@ class HidAuthenticatorContext(private val activity: Activity) :
     override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? {
         return try {
             status = AuthenticatorStatus.WAITING_FOR_UP
+            val activity = obtainActivity()
             withContext(Dispatchers.Main) {
                 val dialog =
                     TimedAcceptDenyDialog(activity).apply {
@@ -94,6 +103,7 @@ class HidAuthenticatorContext(private val activity: Activity) :
                 }
             }
         } finally {
+            releaseActivity()
             status = AuthenticatorStatus.PROCESSING
         }
     }

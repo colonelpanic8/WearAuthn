@@ -202,6 +202,9 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
     abstract suspend fun confirmRequestWithUser(info: RequestInfo): Boolean?
     abstract suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String?
 
+    /** Context used to show dialogs; must be an activity. */
+    protected open suspend fun dialogContext(): Context = context
+
     // We use cached credentials only over NFC, where low latency responses are very important
     private val useCachedCredential = !isHidTransport
     var status: AuthenticatorStatus = AuthenticatorStatus.IDLE
@@ -391,9 +394,10 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         require(credentials.all { it is WebAuthnCredential && it.isResident })
         val credentialsArray = credentials.map { it as WebAuthnCredential }.toTypedArray()
         status = AuthenticatorStatus.WAITING_FOR_UP
+        val dialogContext = dialogContext()
         val credential = withContext(Dispatchers.Main) {
             suspendCancellableCoroutine<WebAuthnCredential?> { continuation ->
-                val dialog = CredentialChooserDialog(credentialsArray, context) {
+                val dialog = CredentialChooserDialog(credentialsArray, dialogContext) {
                     continuation.resume(it)
                 }
                 dialog.show()

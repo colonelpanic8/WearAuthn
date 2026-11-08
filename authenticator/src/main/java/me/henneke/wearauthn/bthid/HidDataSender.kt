@@ -34,9 +34,6 @@ object HidDataSender {
     private val profileListeners = ArraySet<ProfileListener>()
 
     @GuardedBy("lock")
-    private var appContext: Context? = null
-
-    @GuardedBy("lock")
     private var connectedDevice: BluetoothDevice? = null
 
     @GuardedBy("lock")
@@ -141,8 +138,6 @@ object HidDataSender {
                 return hidDeviceProfile
             }
 
-            appContext = context.applicationContext
-            HidForegroundService.start(context.applicationContext)
             hidDeviceProfile.registerServiceListener(
                 context.applicationContext,
                 managingProfileListener
@@ -185,8 +180,6 @@ object HidDataSender {
             hidDeviceApp.unregisterApp()
 
             hidDeviceProfile.unregisterServiceListener()
-            appContext?.let { HidForegroundService.stop(it) }
-            appContext = null
 
             connectedDevice = null
             waitingForDevice = null

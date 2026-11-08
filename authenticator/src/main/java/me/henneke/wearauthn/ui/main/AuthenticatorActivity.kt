@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.ui.main
 
+import me.henneke.wearauthn.service.AuthenticatorService
 import android.os.Bundle
 import android.support.wearable.preference.WearablePreferenceActivity
 import kotlinx.coroutines.*
@@ -23,6 +24,7 @@ class AuthenticatorActivity : WearablePreferenceActivity(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+        AuthenticatorService.start(this)
         launch {
             AuthenticatorContext.initAuthenticator(this@AuthenticatorActivity.applicationContext)
             AuthenticatorContext.refreshCachedWebAuthnCredentialIfNecessary(applicationContext)

@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.ui.main
 
+import me.henneke.wearauthn.service.AuthenticatorService
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -41,30 +42,9 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     private lateinit var binding: ActivityAuthenticatorAttachedBinding
 
-    private var transactionManager: TransactionManager? = null
     private var hidDeviceProfile: HidDeviceProfile? = null
-    private lateinit var authenticatorContext: HidAuthenticatorContext
 
     private lateinit var viewsToHideOnAmbient: List<View>
-
-    private val hidIntrDataListener = object : HidIntrDataListener {
-        override fun onIntrData(
-            device: BluetoothDevice,
-            reportId: Byte,
-            data: ByteArray,
-            host: InputHostWrapper
-        ) {
-            i { "Received report" }
-            d { "Report ID: $reportId" }
-            v { "<- ${Hex.bytesToStringUppercase(data)}" }
-            transactionManager?.handleReport(data) {
-                for (rawReport in it) {
-                    v { "-> ${Hex.bytesToStringUppercase(rawReport)}" }
-                    host.sendReport(device, reportId.toInt(), rawReport)
-                }
-            }
-        }
-    }
 
     private val hidProfileListener = object : HidDataSender.ProfileListener {
         override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
@@ -119,8 +99,8 @@ class AuthenticatorAttachedActivity : WearableActivity() {
             openUrlOnPhone(this, getString(R.string.url_setup))
         }
 
-        authenticatorContext = HidAuthenticatorContext(this)
-        hidDeviceProfile = HidDataSender.register(this, hidProfileListener, hidIntrDataListener)
+        AuthenticatorService.start(this)
+        hidDeviceProfile = HidDataSender.register(this, hidProfileListener, null)
     }
 
     @SuppressLint("MissingPermission")
@@ -131,7 +111,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
             startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), 1)
         }
 
-        transactionManager = TransactionManager(authenticatorContext)
         if (hidDeviceProfile == null) {
             e { "hidDeviceProfile is null" }
             finish()
@@ -170,19 +149,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-
-        // Do not disconnect if another activity is launched by the authenticator.
-        if (authenticatorContext.status != AuthenticatorStatus.IDLE) {
-            w { "onStop() called during authenticator action" }
-            return
-        }
-
-        HidDataSender.requestConnect(null)
-        transactionManager = null
-    }
-
     override fun onEnterAmbient(ambientDetails: Bundle?) {
         super.onEnterAmbient(ambientDetails)
         binding.connectedToDeviceView.paint.isAntiAlias = false
@@ -213,7 +179,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        HidDataSender.unregister(hidProfileListener, hidIntrDataListener)
+        HidDataSender.unregister(hidProfileListener, null)
     }
 
     companion object : Logging {
