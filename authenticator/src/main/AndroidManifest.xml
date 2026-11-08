@@ -21,6 +21,8 @@
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="s" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -78,6 +80,11 @@
         <activity
             android:name="androidx.wear.activity.ConfirmationActivity"
             android:taskAffinity=".ui.main.AuthenticatorActivity" />
+
+        <service
+            android:name="me.henneke.wearauthn.bthid.HidForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
 
         <service
             android:name="me.henneke.wearauthn.fido.nfc.NfcAuthenticatorService"

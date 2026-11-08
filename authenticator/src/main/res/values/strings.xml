@@ -95,4 +95,6 @@
     <string name="preference_log_level_dialog_title">Choose a log level</string>
     <string name="preference_log_level_dialog_message">Logs may contain personal information on \"Debug\" or \"Verbose\".</string>
     <string name="status_bluetooth_permissions_required">Bluetooth permission not granted</string>
+    <string name="notification_channel_hid">Bluetooth security key</string>
+    <string name="notification_hid_title">Ready as a Bluetooth security key</string>
 </resources>
