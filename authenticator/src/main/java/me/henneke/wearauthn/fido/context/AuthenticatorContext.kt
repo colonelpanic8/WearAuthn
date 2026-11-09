@@ -25,7 +25,6 @@ import me.henneke.wearauthn.fido.ctap2.CtapError.Other
 import me.henneke.wearauthn.fido.u2f.resolveAppIdHash
 import me.henneke.wearauthn.ui.*
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 private const val COUNTERS_PREFERENCE_FILE = "counters"
 private val COUNTERS_WRITE_LOCK = Object()
@@ -515,22 +514,27 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         return try {
             status = AuthenticatorStatus.WAITING_FOR_UP
             withContext(Dispatchers.Main) {
-                suspendCoroutine<Boolean> { continuation ->
-                    val intent =
-                        Intent(context, ManageSpaceActivity::class.java).apply {
-                            putExtra(
-                                EXTRA_MANAGE_SPACE_RECEIVER,
-                                object : ResultReceiver(Handler()) {
-                                    override fun onReceiveResult(
-                                        resultCode: Int,
-                                        resultData: Bundle?
-                                    ) {
-                                        continuation.resume(resultCode == Activity.RESULT_OK)
-                                    }
-                                })
-                        }
-                    context.startActivity(intent)
-                }
+                withTimeoutOrNull(HID_USER_PRESENCE_TIMEOUT_MS) {
+                    suspendCancellableCoroutine<Boolean> { continuation ->
+                        val intent =
+                            Intent(context, ManageSpaceActivity::class.java).apply {
+                                putExtra(
+                                    EXTRA_MANAGE_SPACE_RECEIVER,
+                                    object : ResultReceiver(Handler()) {
+                                        override fun onReceiveResult(
+                                            resultCode: Int,
+                                            resultData: Bundle?
+                                        ) {
+                                            if (continuation.isActive)
+                                                continuation.resume(resultCode == Activity.RESULT_OK)
+                                        }
+                                    })
+                                if (context !is Activity)
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                        context.startActivity(intent)
+                    }
+                } ?: false
             }
         } finally {
             status = AuthenticatorStatus.PROCESSING
