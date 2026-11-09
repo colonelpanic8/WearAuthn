@@ -4,10 +4,16 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
+import androidx.annotation.GuardedBy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.sync.Mutex
@@ -22,6 +28,7 @@ import me.henneke.wearauthn.fido.StatusWord
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import me.henneke.wearauthn.fido.ctap2.Authenticator
 import me.henneke.wearauthn.i
+import java.io.Closeable
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
@@ -40,70 +47,135 @@ class RfcommAuthenticator(
     private val scope: CoroutineScope,
     private val onFrame: () -> Unit,
 ) {
-    private var serverSocket: BluetoothServerSocket? = null
-    private var acceptJob: Job? = null
     private val requestLock = Mutex()
+
+    private val lock = Any()
+
+    @GuardedBy("lock")
+    private var acceptJob: Job? = null
+
+    @GuardedBy("lock")
+    private var serverSocket: BluetoothServerSocket? = null
+
+    @GuardedBy("lock")
+    private val clients = mutableSetOf<BluetoothSocket>()
 
     @SuppressLint("MissingPermission")
     fun start() {
-        if (acceptJob != null)
-            return
-        acceptJob = scope.launch(Dispatchers.IO) {
-            val server = try {
-                adapter.listenUsingRfcommWithServiceRecord(SERVICE_NAME, SERVICE_UUID)
-            } catch (e: IOException) {
-                e(e) { "Failed to listen on RFCOMM" }
-                return@launch
-            }
-            serverSocket = server
-            i { "Listening for RFCOMM connections" }
-            while (isActive) {
-                val socket = try {
-                    runInterruptible { server.accept() }
+        synchronized(lock) {
+            if (acceptJob != null)
+                return
+            acceptJob = scope.launch(Dispatchers.IO) {
+                val job = coroutineContext.job
+                try {
+                    val server =
+                        adapter.listenUsingRfcommWithServiceRecord(SERVICE_NAME, SERVICE_UUID)
+                    try {
+                        synchronized(lock) {
+                            if (!job.isActive)
+                                return@launch
+                            serverSocket = server
+                        }
+                        i { "Listening for RFCOMM connections" }
+                        while (true) {
+                            val socket = runInterruptible { server.accept() }
+                            i { "RFCOMM connection from ${socket.remoteDevice.address}" }
+                            launch { serve(socket) }
+                        }
+                    } finally {
+                        server.closeQuietly()
+                    }
                 } catch (e: IOException) {
-                    if (isActive)
-                        e(e) { "RFCOMM accept failed" }
-                    break
+                    if (job.isActive)
+                        e(e) { "RFCOMM listener failed" }
+                } finally {
+                    synchronized(lock) {
+                        if (acceptJob === job) {
+                            acceptJob = null
+                            serverSocket = null
+                        }
+                    }
                 }
-                i { "RFCOMM connection from ${socket.remoteDevice.address}" }
-                launch { serve(socket) }
             }
         }
     }
 
     fun stop() {
-        try {
-            serverSocket?.close()
-        } catch (_: IOException) {
+        synchronized(lock) {
+            acceptJob?.cancel()
+            acceptJob = null
+            // Neither accept() nor a blocked read notices cancellation; closing the sockets
+            // is what ends them.
+            serverSocket?.closeQuietly()
+            serverSocket = null
+            clients.forEach { it.closeQuietly() }
+            clients.clear()
         }
-        serverSocket = null
-        acceptJob?.cancel()
-        acceptJob = null
     }
 
     private suspend fun serve(socket: BluetoothSocket) {
-        val session = ApduSession()
+        val job = currentCoroutineContext().job
+        synchronized(lock) {
+            if (!job.isActive) {
+                socket.closeQuietly()
+                return
+            }
+            clients += socket
+        }
         try {
-            socket.use {
-                val input = DataInputStream(it.inputStream)
-                val output = DataOutputStream(it.outputStream)
-                while (true) {
-                    val length = runInterruptible { input.readInt() }
-                    if (length < 4 || length > MAX_FRAME_SIZE)
-                        throw IOException("Invalid frame length $length")
-                    val request = ByteArray(length)
-                    runInterruptible { input.readFully(request) }
-                    onFrame()
-                    val response = requestLock.withLock { session.handle(request) }
-                    runInterruptible {
-                        output.writeInt(response.size)
-                        output.write(response)
-                        output.flush()
+            coroutineScope {
+                val requests = Channel<ByteArray>()
+                val worker = launch {
+                    try {
+                        answer(socket, requests)
+                    } finally {
+                        socket.closeQuietly()
                     }
+                }
+                // Reading on while a request is in flight is how a peer that went away gets
+                // noticed, which cancels the request and dismisses its prompt.
+                try {
+                    read(socket, requests)
+                } finally {
+                    worker.cancel()
                 }
             }
         } catch (e: IOException) {
             d { "RFCOMM connection closed: ${e.message}" }
+        } finally {
+            socket.closeQuietly()
+            synchronized(lock) { clients -= socket }
+        }
+    }
+
+    private suspend fun read(socket: BluetoothSocket, requests: SendChannel<ByteArray>) {
+        val input = DataInputStream(socket.inputStream)
+        while (true) {
+            val length = input.readInt()
+            if (length < 4 || length > MAX_FRAME_SIZE)
+                throw IOException("Invalid frame length $length")
+            val request = ByteArray(length)
+            input.readFully(request)
+            onFrame()
+            requests.send(request)
+        }
+    }
+
+    private suspend fun answer(socket: BluetoothSocket, requests: ReceiveChannel<ByteArray>) {
+        val session = ApduSession()
+        val output = DataOutputStream(socket.outputStream)
+        for (request in requests) {
+            val response = requestLock.withLock { session.handle(request) }
+            output.writeInt(response.size)
+            output.write(response)
+            output.flush()
+        }
+    }
+
+    private fun Closeable.closeQuietly() {
+        try {
+            close()
+        } catch (_: IOException) {
         }
     }
 
