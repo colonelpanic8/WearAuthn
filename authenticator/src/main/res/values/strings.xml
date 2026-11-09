@@ -64,24 +64,16 @@
     <string name="prompt_delete_resident_credential_message">Delete credential for\n%1$s\n?</string>
     <string name="reset_via_bluetooth_only">Reset only possible via Bluetooth</string>
     <string name="verify_screen_lock_and_retry">Verify screen lock credential and try again</string>
-    <string name="prompt_authenticate_user_verification"><![CDATA[<br/>May require your screen lock password.]]></string>
-    <string name="prompt_register_user_verification"><![CDATA[<br/>Logging in via your watch may require your screen lock password and <b>will no longer be possible after you disable it</b>.]]></string>
-    <string name="prompt_authenticate_resident_key"><![CDATA[<br/>You will be asked to select an account.]]></string>
-    <string name="prompt_register_resident_key"><![CDATA[<br/>The site\'s address and your username will be stored on your watch.]]></string>
     <string name="message_register_user_verification">. Do not disable the screen lock.</string>
     <string name="prompt_platform_get_touch">Continue with this security key?</string>
     <string name="message_platform_get_touch">Not registered or error encountered</string>
     <string name="prompt_authenticate_no_credentials">Reveal that you are not registered?</string>
     <string name="message_authenticate_no_credentials">Revealed that you are not registered</string>
     <string name="generic_part_to">" to %1$s"</string>
-    <string name="generic_part_as">" as %1$s"</string>
     <string name="title_prefix_unknown_site_with_number">Unknown site #%1$d</string>
     <string name="message_register_credential_excluded">Revealed previous registration or error%1$s</string>
     <string name="message_register">Registered%1$s%2$s</string>
     <string name="message_authenticate">Authenticated%1$s%2$s</string>
-    <string name="prompt_register_credential_excluded">Reveal previous registration or error%1$s?</string>
-    <string name="prompt_register">Register%1$s%2$s?%3$s</string>
-    <string name="prompt_authenticate">Authenticate%1$s%2$s?%3$s</string>
     <string name="label_complication_device_shortcut">Device shortcut</string>
     <string name="preference_support_key" translatable="false">preference_support</string>
     <string name="preference_support_not_purchased_title">Support WearAuthn</string>
@@ -115,4 +107,14 @@
     <string name="notification_phone_title">Ready for your phone</string>
     <string name="notification_channel_prompt">Security key requests</string>
     <string name="notification_prompt_title">Security key request – tap to review</string>
+    <string name="prompt_action_sign_in_to">Sign in to</string>
+    <string name="prompt_action_sign_in">Sign in?</string>
+    <string name="prompt_action_register_with">Register with</string>
+    <string name="prompt_action_register">Register?</string>
+    <string name="prompt_action_reveal_registration_to">Reveal a previous registration to</string>
+    <string name="prompt_action_reveal_registration">Reveal a previous registration?</string>
+    <string name="prompt_note_authenticate_user_verification">May need your screen lock.</string>
+    <string name="prompt_note_authenticate_resident_key">You will pick an account next.</string>
+    <string name="prompt_note_register_user_verification">Signing in with the watch may need your screen lock, and stops working if you turn the lock off.</string>
+    <string name="prompt_note_register_resident_key">The site\'s address and your user name are stored on the watch.</string>
 </resources>

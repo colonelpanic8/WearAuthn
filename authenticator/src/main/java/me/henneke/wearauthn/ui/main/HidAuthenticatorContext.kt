@@ -8,6 +8,7 @@ import me.henneke.wearauthn.breakAt
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus
 import me.henneke.wearauthn.fido.context.AuthenticatorStatus
+import me.henneke.wearauthn.fido.context.PromptContent
 import me.henneke.wearauthn.fido.context.RequestInfo
 import me.henneke.wearauthn.fido.hid.HID_USER_PRESENCE_TIMEOUT_MS
 import me.henneke.wearauthn.ui.PromptActivity
@@ -45,7 +46,7 @@ class HidAuthenticatorContext(
                     TimedAcceptDenyDialog(activity).apply {
                         create()
                         setIcon(R.drawable.ic_launcher_outline)
-                        setMessage(info.confirmationPrompt)
+                        setMessage(info.prompt.asText())
                         setTimeout(HID_USER_PRESENCE_TIMEOUT_MS)
                         setVibrateOnShow(true)
                         setWakeOnShow(true)
@@ -103,3 +104,6 @@ class HidAuthenticatorContext(
         }
     }
 }
+
+private fun PromptContent.asText(): String =
+    (listOfNotNull(action, site, siteName, account) + notes).joinToString("\n")

@@ -8,8 +8,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
 import android.security.keystore.UserNotAuthenticatedException
-import android.text.Html
-import android.text.Spanned
 import androidx.annotation.WorkerThread
 import androidx.core.content.edit
 import kotlinx.coroutines.*
@@ -47,55 +45,66 @@ enum class AuthenticatorAction {
     PLATFORM_GET_TOUCH
 }
 
+/** What a confirmation prompt shows, in the order it shows it. */
+data class PromptContent(
+    /** "Sign in to", "Register with", or a full question when there is no site. */
+    val action: String,
+    val site: String?,
+    val siteName: String?,
+    val account: String?,
+    val notes: List<String>,
+)
+
 sealed class RequestInfo(private val context: Context, private val action: AuthenticatorAction) {
-    protected abstract val formattedRp: String?
-    protected abstract val shortRp: String?
-    protected abstract val formattedUser: String?
-    protected abstract val formattedAdditionalInfo: String
+    protected abstract val site: String?
+    protected open val siteName: String? = null
+    protected open val account: String? = null
+    protected open val requiresUserVerification: Boolean = false
+    protected open val addResidentKeyHint: Boolean = false
     protected abstract val shortAdditionalInfo: String
 
-    private val formattedRpPart by lazy {
-        if (formattedRp != null) context.getString(
-            R.string.generic_part_to,
-            formattedRp
-        ) else ""
-    }
     private val shortRpPart by lazy {
-        if (shortRp != null) context.getString(
-            R.string.generic_part_to,
-            shortRp
-        ) else ""
-    }
-    private val formattedUserPart by lazy {
-        if (formattedUser != null) context.getString(
-            R.string.generic_part_as,
-            formattedUser
-        ) else ""
+        if (site != null) context.getString(R.string.generic_part_to, site) else ""
     }
 
-    val confirmationPrompt: Spanned
-        get() = Html.fromHtml(
-            when (action) {
-                AUTHENTICATE -> context.getString(
-                    R.string.prompt_authenticate,
-                    formattedRpPart,
-                    formattedUserPart,
-                    formattedAdditionalInfo
+    val prompt: PromptContent
+        get() {
+            val showsSite = action in setOf(AUTHENTICATE, REGISTER, REGISTER_CREDENTIAL_EXCLUDED)
+            val site = site.takeIf { showsSite }
+            val actionText = when (action) {
+                AUTHENTICATE ->
+                    if (site != null) R.string.prompt_action_sign_in_to
+                    else R.string.prompt_action_sign_in
+                REGISTER ->
+                    if (site != null) R.string.prompt_action_register_with
+                    else R.string.prompt_action_register
+                REGISTER_CREDENTIAL_EXCLUDED ->
+                    if (site != null) R.string.prompt_action_reveal_registration_to
+                    else R.string.prompt_action_reveal_registration
+                AUTHENTICATE_NO_CREDENTIALS -> R.string.prompt_authenticate_no_credentials
+                PLATFORM_GET_TOUCH -> R.string.prompt_platform_get_touch
+            }
+            val notes = when (action) {
+                AUTHENTICATE -> listOfNotNull(
+                    R.string.prompt_note_authenticate_user_verification
+                        .takeIf { requiresUserVerification },
+                    R.string.prompt_note_authenticate_resident_key.takeIf { addResidentKeyHint },
                 )
-                AUTHENTICATE_NO_CREDENTIALS -> context.getString(R.string.prompt_authenticate_no_credentials)
-                REGISTER -> context.getString(
-                    R.string.prompt_register,
-                    formattedRpPart,
-                    formattedUserPart,
-                    formattedAdditionalInfo
+                REGISTER -> listOfNotNull(
+                    R.string.prompt_note_register_user_verification
+                        .takeIf { requiresUserVerification },
+                    R.string.prompt_note_register_resident_key.takeIf { addResidentKeyHint },
                 )
-                REGISTER_CREDENTIAL_EXCLUDED -> context.getString(
-                    R.string.prompt_register_credential_excluded,
-                    formattedRpPart
-                )
-                PLATFORM_GET_TOUCH -> context.getString(R.string.prompt_platform_get_touch)
-            }, Html.FROM_HTML_MODE_LEGACY
-        )
+                else -> emptyList()
+            }
+            return PromptContent(
+                action = context.getString(actionText),
+                site = site,
+                siteName = siteName.takeIf { site != null },
+                account = account.takeIf { action == AUTHENTICATE || action == REGISTER },
+                notes = notes.map { context.getString(it) },
+            )
+        }
 
     val successMessage: String
         get() = when (action) {
@@ -121,13 +130,10 @@ sealed class RequestInfo(private val context: Context, private val action: Authe
 class U2fRequestInfo(
     context: Context,
     action: AuthenticatorAction,
-    private val appIdHash: ByteArray
+    appIdHash: ByteArray
 ) :
     RequestInfo(context, action) {
-    override val formattedRp = resolveAppIdHash(appIdHash)?.let { "<br/><b>$it</b><br/>" }
-    override val shortRp = resolveAppIdHash(appIdHash)
-    override val formattedUser: String? = null
-    override val formattedAdditionalInfo = ""
+    override val site = resolveAppIdHash(appIdHash)
     override val shortAdditionalInfo = ""
 }
 
@@ -138,45 +144,17 @@ class Ctap2RequestInfo(
     rpName: String? = null,
     userName: String? = null,
     userDisplayName: String? = null,
-    requiresUserVerification: Boolean = false,
-    addResidentKeyHint: Boolean = false
+    override val requiresUserVerification: Boolean = false,
+    override val addResidentKeyHint: Boolean = false
 ) :
     RequestInfo(context, action) {
 
-    override val formattedRp = if (!rpName.isNullOrBlank())
-        "<br/><b>${rpId.escapeHtml()}</b><br/>(“${rpName.escapeHtml()}”)<br/>"
-    else
-        "<br/><b>${rpId.escapeHtml()}</b><br/>"
+    override val site = rpId
 
-    override val shortRp = rpId
+    override val siteName = rpName.takeUnless { it.isNullOrBlank() }
 
-    override val formattedUser = if (!userName.isNullOrBlank())
-        userName.escapeHtml()
-    else if (!userDisplayName.isNullOrBlank())
-        userDisplayName.escapeHtml()
-    else null
-
-    override val formattedAdditionalInfo = if (requiresUserVerification || addResidentKeyHint) {
-        "<br/>"
-    } else {
-        ""
-    } + if (requiresUserVerification) {
-        when (action) {
-            AUTHENTICATE -> context.getString(R.string.prompt_authenticate_user_verification)
-            REGISTER -> context.getString(R.string.prompt_register_user_verification)
-            else -> ""
-        }
-    } else {
-        ""
-    } + if (addResidentKeyHint) {
-        when (action) {
-            AUTHENTICATE -> context.getString(R.string.prompt_authenticate_resident_key)
-            REGISTER -> context.getString(R.string.prompt_register_resident_key)
-            else -> ""
-        }
-    } else {
-        ""
-    }
+    override val account = userName.takeUnless { it.isNullOrBlank() }
+        ?: userDisplayName.takeUnless { it.isNullOrBlank() }
 
     override val shortAdditionalInfo = if (requiresUserVerification && action == REGISTER) {
         context.getString(R.string.message_register_user_verification)

@@ -53,25 +53,17 @@
     <string name="prompt_delete_all_data_second_step_message">Zum Bestätigen herunterscrollen.\n\n\n\n\n\n\n\n\n\n\n<b>Wirklich alle Anmeldedaten löschen?</b></string>
     <string name="prompt_delete_resident_credential_message">Anmeldedaten für\n%1$s\nlöschen?</string>
     <string name="generic_part_to">" bei %1$s"</string>
-    <string name="generic_part_as">" als %1$s"</string>
     <string name="title_prefix_unknown_site_with_number">Unbekannte Seite #%1$d</string>
     <string name="prompt_platform_get_touch">Mit diesem Sicherheitsschlüssel fortfahren?</string>
     <string name="message_platform_get_touch">Nicht registriert oder anderer Fehler</string>
     <string name="message_register_user_verification">. Displaysperre nicht deaktivieren.</string>
-    <string name="prompt_register_resident_key"><![CDATA[<br/>Die Adresse der Seite und dein Benutzername werden auf deiner Uhr gespeichert.]]></string>
-    <string name="prompt_authenticate_resident_key"><![CDATA[<br/>Wähle im nächsten Schritt einen Account aus.]]></string>
-    <string name="prompt_register_user_verification"><![CDATA[<br/>Anmeldungen über die Uhr erfordern ggf. das Passwort für die Displaysperre und <b>sind nicht mehr möglich nachdem du sie deaktivierst</b>.]]></string>
-    <string name="prompt_authenticate_user_verification"><![CDATA[<br/>Erfordert ggf. das Passwort für die Displaysperre.]]></string>
     <string name="message_register">Registriert%1$s%2$s</string>
     <string name="message_authenticate">Angemeldet%1$s%2$s</string>
-    <string name="prompt_register">Registrierung%1$s%2$s bestätigen?%3$s</string>
-    <string name="prompt_authenticate">Anmeldung%1$s%2$s bestätigen?%3$s</string>
     <string name="about_how_to_use"><b>Verwendung über Bluetooth</b>\nKopple ein Bluetooth&#8203;-&#8203;fähiges Gerät mit Windows 10 (Chrome, Firefox oder Edge), macOS (Chrome) oder Linux (Chrome) mit deiner Uhr und verbinde dich aus WearAuthns Hauptmenü damit. Danach kannst du deine Uhr wie einen eingestecken USB-Sicherheitsschlüssel verwenden.\n\n<b>Verwendung über NFC</b>\nHalte dein NFC&#8203;-&#8203;fähiges Android-Gerät oder iPhone (iOS 13.3+) an deine Uhr, wenn du dazu aufgefordert wirst, deinen Sicherheitsschlüssel zu verwenden. Das funktioniert auch vom Zifferblatt aus, solange es nicht im Ruhemodus ist.</string>
     <string name="prompt_single_factor_mode_message"><![CDATA[Registrierungen im passwortlosen Modus erlauben dir auf manchen Seiten die Anmeldung ohne Nutzernamen oder Passwort.<br/><br/>Passwortlose Anmeldungen funktionieren nicht mehr nachdem du deine Displaysperre deaktivierst und können dann nicht mehr aktiviert werden, ohne WearAuthn vollständig zurückzusetzen.<br/><br/>Fortfahren?]]></string>
     <string name="prompt_authenticate_no_credentials">Fehlende Registrierung offenbaren?</string>
     <string name="message_authenticate_no_credentials">Fehlende Registrierung offenbart</string>
     <string name="message_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbart.</string>
-    <string name="prompt_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbaren?</string>
     <string name="label_complication_device_shortcut">Geräteverknüpfung</string>
     <string name="preference_support_not_purchased_title">Unterstütze WearAuthn</string>
     <string name="preference_support_not_purchased_summary">und schalte ein Zifferblatt-Symbol frei</string>
@@ -100,5 +92,15 @@
     <string name="notification_phone_title">Bereit für dein Telefon</string>
     <string name="notification_channel_prompt">Sicherheitsschlüssel-Anfragen</string>
     <string name="notification_prompt_title">Sicherheitsschlüssel-Anfrage – zum Prüfen tippen</string>
+    <string name="prompt_action_sign_in_to">Anmelden bei</string>
+    <string name="prompt_action_sign_in">Anmelden?</string>
+    <string name="prompt_action_register_with">Registrieren bei</string>
+    <string name="prompt_action_register">Registrieren?</string>
+    <string name="prompt_action_reveal_registration_to">Bestehende Registrierung offenbaren bei</string>
+    <string name="prompt_action_reveal_registration">Bestehende Registrierung offenbaren?</string>
+    <string name="prompt_note_authenticate_user_verification">Erfordert ggf. deine Displaysperre.</string>
+    <string name="prompt_note_authenticate_resident_key">Wähle im nächsten Schritt einen Account aus.</string>
+    <string name="prompt_note_register_user_verification">Anmeldungen über die Uhr erfordern ggf. deine Displaysperre und funktionieren nicht mehr, nachdem du sie deaktivierst.</string>
+    <string name="prompt_note_register_resident_key">Die Adresse der Seite und dein Benutzername werden auf der Uhr gespeichert.</string>
 </resources>
 
