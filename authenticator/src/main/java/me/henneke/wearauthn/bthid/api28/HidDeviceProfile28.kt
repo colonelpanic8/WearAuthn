@@ -16,18 +16,19 @@ import me.henneke.wearauthn.bthid.canUseAuthenticatorViaBluetooth
 @SuppressLint("MissingPermission")
 class HidDeviceProfile28(bluetoothAdapter: BluetoothAdapter) : HidDeviceProfile(bluetoothAdapter) {
 
-    private var service: BluetoothHidDevice? = null
+    private val hidDevice: BluetoothHidDevice?
+        get() = service as? BluetoothHidDevice
 
     override val connectedDevices: List<BluetoothDevice>
-        get() = service?.connectedDevices ?: emptyList()
+        get() = hidDevice?.connectedDevices ?: emptyList()
     override val profileId = BluetoothProfile.HID_DEVICE
 
     override fun getConnectionState(device: BluetoothDevice): Int {
-        return service?.getConnectionState(device) ?: BluetoothProfile.STATE_DISCONNECTED
+        return hidDevice?.getConnectionState(device) ?: BluetoothProfile.STATE_DISCONNECTED
     }
 
     override fun connect(device: BluetoothDevice) {
-        service?.run {
+        hidDevice?.run {
             if (device.canUseAuthenticatorViaBluetooth) {
                 connect(device)
             }
@@ -35,7 +36,7 @@ class HidDeviceProfile28(bluetoothAdapter: BluetoothAdapter) : HidDeviceProfile(
     }
 
     override fun disconnect(device: BluetoothDevice) {
-        service?.run {
+        hidDevice?.run {
             if (device.canUseAuthenticatorViaBluetooth) {
                 disconnect(device)
             }
@@ -44,11 +45,6 @@ class HidDeviceProfile28(bluetoothAdapter: BluetoothAdapter) : HidDeviceProfile(
 
     @MainThread
     override fun getDevicesMatchingConnectionStates(states: IntArray): List<BluetoothDevice> {
-        return service?.getDevicesMatchingConnectionStates(states) ?: emptyList()
-    }
-
-    override fun onServiceStateChanged(proxy: BluetoothProfile?) {
-        service = proxy as? BluetoothHidDevice
-        super.onServiceStateChanged(proxy)
+        return hidDevice?.getDevicesMatchingConnectionStates(states) ?: emptyList()
     }
 }

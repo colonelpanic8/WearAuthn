@@ -13,7 +13,8 @@ import androidx.annotation.MainThread
 /** Wrapper for BluetoothInputHost profile that manages paired HID Host devices.  */
 abstract class HidDeviceProfile(private val bluetoothAdapter: BluetoothAdapter) {
     private var serviceStateListener: ServiceStateListener? = null
-    private var service: BluetoothProfile? = null
+    protected var service: BluetoothProfile? = null
+        private set
 
     /**
      * Get all devices that are in the "Connected" state.
