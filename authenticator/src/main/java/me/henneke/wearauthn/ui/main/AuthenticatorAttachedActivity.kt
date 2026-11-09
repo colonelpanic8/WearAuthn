@@ -32,7 +32,6 @@ import me.henneke.wearauthn.e
 import me.henneke.wearauthn.fido.context.AuthenticatorStatus
 import me.henneke.wearauthn.fido.hid.TransactionManager
 import me.henneke.wearauthn.i
-import me.henneke.wearauthn.ui.openUrlOnPhone
 import me.henneke.wearauthn.v
 import me.henneke.wearauthn.w
 import java.util.Date
@@ -92,12 +91,8 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         setContentView(binding.root)
 
         setAmbientEnabled()
-        viewsToHideOnAmbient = listOf(binding.explanationView, binding.setupOpenOnPhoneButton)
+        viewsToHideOnAmbient = listOf(binding.explanationView)
         binding.textClock.paint.isAntiAlias = false
-
-        binding.setupOpenOnPhoneButton.setOnClickListener {
-            openUrlOnPhone(this, getString(R.string.url_setup))
-        }
 
         AuthenticatorService.start(this)
         hidDeviceProfile = HidDataSender.register(this, hidProfileListener, null)

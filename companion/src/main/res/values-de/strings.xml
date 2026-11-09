@@ -8,12 +8,9 @@
     <string name="description_complication_unlock_card">Unterstütze die Entwicklung von WearAuthn und schalte ein Zifferblatt-Symbol frei, das WearAuthn direkt mit einem vorher gewählten Gerät verbindet.</string>
     <string name="title_install_watch_card">WearAuthn auf der Uhr installieren</string>
     <string name="description_install_watch_card">Öffne den Play Store auf deiner Uhr und installiere WearAuthn aus dem Bereich \"Apps auf meinem Smartphone\". Alternativ suche einfach nach \"wearauthn\".</string>
-    <string name="file_bug_email_subject">Fehlerbericht</string>
     <string name="title_complication_unlock_card">Zifferblatt-Symbol freischalten</string>
     <string name="message_unlocked_on_watch">Zifferblatt-Symbol verfügbar auf %1$s!</string>
     <string name="label_purchase_button_pending">In Bearbeitung</string>
-    <string name="file_bug_email_body">Vielen Dank für diesen Fehlerbericht! Bitte gib so viele Informationen wie möglich, damit das Problem behoben werden kann.\n\nWas geht schief?\n\n\nSchritte, die zum Problem führen:\n\n1.\n2.\n3.\n4.\n\nWelches Uhren-Modell benutzt du? (zu finden unter Einstellungen -> System -> Info)\n\n%1$s\n\nWelche Systemversion läuft auf deiner Uhr? (zu finden unter Einstellungen -> System -> Info -> Versionen)\n\n\nWelche WearAuthn-Version benutzt du? (zu finden in WearAuthns Info-Bildschirm)</string>
-    <string name="label_report_a_bug">Problem melden</string>
     <string name="screenshot1_install_watch_card">Öffne den Bereich \"Apps auf meinem Smartphone\" im Play Store auf deiner Uhr</string>
     <string name="screenshot2_install_watch_card">Wähle \"WearAuthn\" aus und installiere es</string>
 </resources>

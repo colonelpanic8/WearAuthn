@@ -32,14 +32,6 @@
             android:textAlignment="center"
             android:textAppearance="@android:style/TextAppearance.Material.Body1" />
 
-        <ImageButton
-            android:id="@+id/setupOpenOnPhoneButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:background="?android:selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_btn_open_on_phone" />
-
     </LinearLayout>
 
     <FrameLayout

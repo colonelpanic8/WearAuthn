@@ -37,15 +37,6 @@
             android:text="@string/about_how_to_use"
             android:textAppearance="@android:style/TextAppearance.Material.Body1" />
 
-        <ImageButton
-            android:id="@+id/howToUseOpenOnPhoneButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
-            android:background="?android:selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_btn_open_on_phone" />
-
         <TextView
             android:id="@+id/keyStorageView"
             android:layout_width="wrap_content"

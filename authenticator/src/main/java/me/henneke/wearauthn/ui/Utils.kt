@@ -63,19 +63,6 @@ val Context.hasBluetoothPermissions: Boolean
                 .all { it == PackageManager.PERMISSION_GRANTED }
         }
 
-fun openUrlOnPhone(activity: Activity, url: String) {
-    RemoteIntent.startRemoteActivity(
-        activity,
-        Intent(Intent.ACTION_VIEW)
-            .addCategory(Intent.CATEGORY_BROWSABLE)
-            .setData(Uri.parse(url)),
-        null
-    )
-    ConfirmationOverlay().setType(ConfirmationOverlay.OPEN_ON_PHONE_ANIMATION)
-        .setMessage(activity.getString(R.string.message_continue_on_phone))
-        .showOn(activity)
-}
-
 fun openPlayStoreListingOnPhone(activity: Activity) {
     RemoteIntent.startRemoteActivity(
         activity,
