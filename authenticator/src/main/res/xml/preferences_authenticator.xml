@@ -42,6 +42,7 @@
 
         <ListPreference
             android:dialogTitle="@string/preference_session_timeout_title"
+            android:icon="@drawable/ic_btn_timer"
             android:key="@string/preference_session_timeout_key"
             android:order="@integer/order_device_list_session_timeout"
             android:summary="%s"
