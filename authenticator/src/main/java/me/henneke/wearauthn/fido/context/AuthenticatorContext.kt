@@ -17,6 +17,7 @@ import me.henneke.wearauthn.*
 import me.henneke.wearauthn.Logging.Companion.i
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
 import me.henneke.wearauthn.fido.ctap2.AttestationType
+import me.henneke.wearauthn.fido.hid.HID_USER_PRESENCE_TIMEOUT_MS
 import me.henneke.wearauthn.fido.ctap2.CTAP_ERR
 import me.henneke.wearauthn.fido.ctap2.CborValue
 import me.henneke.wearauthn.fido.ctap2.CtapError.OperationDenied
@@ -360,8 +361,15 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         if (updateAuthenticatorStatus)
             status = AuthenticatorStatus.WAITING_FOR_UP
         withContext(Dispatchers.Main) {
-            val confirmCredentialJob = launch {
-                suspendCoroutine<Nothing?> { continuation ->
+            val winkJob = launch {
+                delay(1_000)
+                wink(context)
+            }
+            // Without a timeout, a credential screen that never reports back (for example after
+            // the user navigates home) would block this transport indefinitely.
+            withTimeoutOrNull(HID_USER_PRESENCE_TIMEOUT_MS) {
+                suspendCancellableCoroutine<Unit> { continuation ->
+                    continuation.invokeOnCancellation { ConfirmDeviceCredentialActivity.dismiss() }
                     val intent =
                         Intent(context, ConfirmDeviceCredentialActivity::class.java).apply {
                             putExtra(
@@ -371,7 +379,8 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                                         resultCode: Int,
                                         resultData: Bundle?
                                     ) {
-                                        continuation.resume(null)
+                                        if (continuation.isActive)
+                                            continuation.resume(Unit)
                                     }
                                 })
                             // Starting with Android P (due to a bug, Oreo is excepted),
@@ -384,9 +393,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                     context.startActivity(intent)
                 }
             }
-            delay(1_000)
-            wink(context)
-            confirmCredentialJob.join()
+            winkJob.cancel()
         }
         if (updateAuthenticatorStatus)
             status = AuthenticatorStatus.PROCESSING

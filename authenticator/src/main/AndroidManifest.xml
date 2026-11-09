@@ -74,7 +74,10 @@
             android:taskAffinity=".ui.main.AuthenticatorActivity" />
         <activity
             android:name="me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity"
-            android:taskAffinity=".ui.main.AuthenticatorActivity" />
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:taskAffinity=".ui.ConfirmDeviceCredentialActivity"
+            android:turnScreenOn="true" />
         <activity
             android:name="me.henneke.wearauthn.ui.PromptActivity"
             android:excludeFromRecents="true"
