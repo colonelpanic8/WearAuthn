@@ -29,7 +29,6 @@ import me.henneke.wearauthn.bthid.InputHostWrapper
 import me.henneke.wearauthn.fido.hid.TransactionManager
 import me.henneke.wearauthn.fido.rfcomm.RfcommAuthenticator
 import me.henneke.wearauthn.i
-import me.henneke.wearauthn.ui.PromptActivity
 import me.henneke.wearauthn.ui.bluetoothAdapter
 import me.henneke.wearauthn.ui.defaultSharedPreferences
 import me.henneke.wearauthn.ui.hasBluetoothPermissions
@@ -99,22 +98,13 @@ class AuthenticatorService : Service(), CoroutineScope {
     override fun onCreate() {
         super.onCreate()
         startForegroundWithNotification()
-        authenticatorContext = HidAuthenticatorContext(
-            this,
-            obtainActivity = { PromptActivity.obtain(this) },
-            releaseActivity = { PromptActivity.release() },
-        )
+        authenticatorContext = HidAuthenticatorContext(this)
         transactionManager = TransactionManager(authenticatorContext)
         HidDataSender.addListener(profileListener)
         HidDataSender.start(this, ioListener)
         bluetoothAdapter?.let { adapter ->
             // Phones ask for one credential at a time and only talk to the watch.
-            val rfcommContext = HidAuthenticatorContext(
-                this,
-                obtainActivity = { PromptActivity.obtain(this) },
-                releaseActivity = { PromptActivity.release() },
-                confirmsAbsentCredentials = false,
-            )
+            val rfcommContext = HidAuthenticatorContext(this, confirmsAbsentCredentials = false)
             rfcommAuthenticator =
                 RfcommAuthenticator(adapter, rfcommContext, this, ::recordActivity).also {
                     it.start()

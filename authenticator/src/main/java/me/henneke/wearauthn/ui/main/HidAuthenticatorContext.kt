@@ -1,11 +1,8 @@
 package me.henneke.wearauthn.ui.main
 
-import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import me.henneke.wearauthn.R
 import me.henneke.wearauthn.breakAt
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
@@ -13,18 +10,19 @@ import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus
 import me.henneke.wearauthn.fido.context.AuthenticatorStatus
 import me.henneke.wearauthn.fido.context.RequestInfo
 import me.henneke.wearauthn.fido.hid.HID_USER_PRESENCE_TIMEOUT_MS
+import me.henneke.wearauthn.ui.PromptActivity
 import me.henneke.wearauthn.ui.TimedAcceptDenyDialog
 import kotlin.coroutines.resume
 
 @ExperimentalUnsignedTypes
 class HidAuthenticatorContext(
-    context: Context,
-    private val obtainActivity: suspend () -> Activity,
-    private val releaseActivity: suspend () -> Unit = {},
+    private val context: Context,
     override val confirmsAbsentCredentials: Boolean = true,
 ) : AuthenticatorContext(context, isHidTransport = true) {
 
-    override suspend fun dialogContext(): Context = obtainActivity()
+    override suspend fun <T> withDialogContext(block: suspend (Context) -> T): T? =
+        PromptActivity.use(context, block)
+
     override fun notifyUser(info: RequestInfo) {
         // No-op for HID transport since we already asked for confirmation during
         // confirmWithUser
@@ -37,13 +35,12 @@ class HidAuthenticatorContext(
 
     /**
      * Returns true if the user confirms the request, false if the user denies it explicitly and
-     * null if the confirmation dialog times out.
+     * null if the confirmation dialog times out or cannot be shown.
      */
     override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean? {
         return try {
             status = AuthenticatorStatus.WAITING_FOR_UP
-            val activity = obtainActivity()
-            withContext(Dispatchers.Main) {
+            PromptActivity.use(context) { activity ->
                 val dialog =
                     TimedAcceptDenyDialog(activity).apply {
                         create()
@@ -65,7 +62,6 @@ class HidAuthenticatorContext(
                 }
             }
         } finally {
-            releaseActivity()
             status = AuthenticatorStatus.PROCESSING
         }
     }
@@ -73,8 +69,7 @@ class HidAuthenticatorContext(
     override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? {
         return try {
             status = AuthenticatorStatus.WAITING_FOR_UP
-            val activity = obtainActivity()
-            withContext(Dispatchers.Main) {
+            PromptActivity.use(context) { activity ->
                 val dialog =
                     TimedAcceptDenyDialog(activity).apply {
                         create()
@@ -104,7 +99,6 @@ class HidAuthenticatorContext(
                 }
             }
         } finally {
-            releaseActivity()
             status = AuthenticatorStatus.PROCESSING
         }
     }

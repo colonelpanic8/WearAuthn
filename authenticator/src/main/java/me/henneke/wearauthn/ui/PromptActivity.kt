@@ -11,7 +11,7 @@ import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import me.henneke.wearauthn.R
 
 /**
@@ -29,6 +29,10 @@ class PromptActivity : Activity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
+        if (users == 0) {
+            finish()
+            return
+        }
         current = this
         pending?.complete(this)
         pending = null
@@ -45,27 +49,40 @@ class PromptActivity : Activity() {
         private const val CHANNEL_ID = "prompt"
         private const val NOTIFICATION_ID = 2
 
+        // Main thread only.
         private var current: PromptActivity? = null
         private var pending: CompletableDeferred<PromptActivity>? = null
+        private var users = 0
 
-        suspend fun obtain(context: Context): Activity = withContext(Dispatchers.Main) {
-            current?.takeUnless { it.isFinishing || it.isDestroyed }?.let { return@withContext it }
-            val deferred = pending ?: CompletableDeferred<PromptActivity>().also {
-                pending = it
-                launch(context)
+        /**
+         * Runs [block] on the main thread with the activity on screen, and finishes the activity
+         * once no caller uses it any more. Returns null without running [block] if the activity
+         * could not be shown in time.
+         */
+        suspend fun <T> use(context: Context, block: suspend (Activity) -> T): T? =
+            withContext(Dispatchers.Main) {
+                users++
+                try {
+                    val activity = current?.takeUnless { it.isFinishing || it.isDestroyed }
+                        ?: withTimeoutOrNull(LAUNCH_TIMEOUT_MS) {
+                            val launching = pending ?: CompletableDeferred<PromptActivity>().also {
+                                pending = it
+                                launch(context)
+                            }
+                            launching.await()
+                        }
+                    activity?.let { block(it) }
+                } finally {
+                    // No suspension here, so this also runs to completion when cancelled.
+                    if (--users == 0) {
+                        pending = null
+                        context.getSystemService(NotificationManager::class.java)
+                            .cancel(NOTIFICATION_ID)
+                        current?.finish()
+                        current = null
+                    }
+                }
             }
-            try {
-                withTimeout(LAUNCH_TIMEOUT_MS) { deferred.await() }
-            } finally {
-                pending = null
-                context.getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
-            }
-        }
-
-        suspend fun release() = withContext(Dispatchers.Main) {
-            current?.finish()
-            current = null
-        }
 
         private fun launch(context: Context) {
             val intent = Intent(context, PromptActivity::class.java)
