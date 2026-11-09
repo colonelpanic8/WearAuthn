@@ -11,6 +11,8 @@ enum class SessionTimeout(
     FIVE_MINUTES("5", 5 * 60_000L, R.string.session_timeout_five_minutes),
     FIFTEEN_MINUTES("15", 15 * 60_000L, R.string.session_timeout_fifteen_minutes),
     ONE_HOUR("60", 60 * 60_000L, R.string.session_timeout_one_hour),
+    FOUR_HOURS("240", 4 * 60 * 60_000L, R.string.session_timeout_four_hours),
+    TWELVE_HOURS("720", 12 * 60 * 60_000L, R.string.session_timeout_twelve_hours),
     UNTIL_TURNED_OFF("never", null, R.string.session_timeout_until_turned_off);
 
     companion object {

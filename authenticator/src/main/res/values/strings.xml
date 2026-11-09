@@ -101,7 +101,13 @@
     <string name="session_timeout_five_minutes">5 minutes</string>
     <string name="session_timeout_fifteen_minutes">15 minutes</string>
     <string name="session_timeout_one_hour">1 hour</string>
-    <string name="session_timeout_until_turned_off">Until turned off</string>
+    <string name="session_timeout_four_hours">4 hours</string>
+    <string name="session_timeout_twelve_hours">12 hours</string>
+    <string name="session_timeout_until_turned_off">No time limit</string>
+    <string name="preference_end_session_off_wrist_key" translatable="false">preference_end_session_off_wrist</string>
+    <string name="preference_end_session_off_wrist_title">Only while worn</string>
+    <string name="preference_end_session_off_wrist_summary_on">Computers lose access when you take the watch off</string>
+    <string name="preference_end_session_off_wrist_summary_off">Computers keep access when you take the watch off</string>
     <string name="preference_phone_always_ready_key" translatable="false">preference_phone_always_ready</string>
     <string name="preference_phone_always_ready_title">Always ready for phone</string>
     <string name="preference_phone_always_ready_summary_on">No need to open this app first</string>

@@ -46,8 +46,9 @@ import kotlin.coroutines.CoroutineContext
  * confirmation prompts show on top of whatever is on screen.
  *
  * Opening the app also arms a session for computers: the Bluetooth HID Device app is registered
- * and the last host is attached once. The session ends after the configured idle time or from
- * the notification. The service then stops too, unless it is set to stay ready for phones.
+ * and the last host is attached once. The session ends after the configured idle time, when
+ * the watch is taken off the wrist, or from the notification. The service then stops too,
+ * unless it is set to stay ready for phones.
  * Listening for a phone costs no radio time, since the phone is connected anyway. Paging a
  * computer and holding a link to it does.
  *
@@ -66,6 +67,14 @@ class AuthenticatorService : Service(), CoroutineScope {
     @Volatile
     private var hidTransactions: TransactionManager? = null
     private var idleWatch: Job? = null
+    private val offWrist by lazy {
+        OffWristMonitor(this) {
+            if (endsSessionOffWrist) {
+                i { "Taken off the wrist; ending session" }
+                disarm()
+            }
+        }
+    }
     private var lastStartId = 0
 
     @Volatile
@@ -121,6 +130,12 @@ class AuthenticatorService : Service(), CoroutineScope {
             defaultSharedPreferences.getString(getString(R.string.preference_session_timeout_key), null)
         )
 
+    private val endsSessionOffWrist: Boolean
+        get() = defaultSharedPreferences.getBoolean(
+            getString(R.string.preference_end_session_off_wrist_key),
+            resources.getBoolean(R.bool.default_end_session_off_wrist)
+        )
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -162,6 +177,7 @@ class AuthenticatorService : Service(), CoroutineScope {
         rfcommAuthenticator?.stop()
         HidDataSender.stop()
         hidTransactions?.close()
+        offWrist.stop()
         cancel()
         super.onDestroy()
     }
@@ -172,6 +188,7 @@ class AuthenticatorService : Service(), CoroutineScope {
             hidTransactions = TransactionManager(authenticatorContext)
             HidDataSender.start(this, ioListener)
             idleWatch = watchIdleTime()
+            offWrist.start()
             showNotification()
         }
         if (!HidDataSender.hasTarget)
@@ -181,6 +198,7 @@ class AuthenticatorService : Service(), CoroutineScope {
     private fun disarm() {
         idleWatch?.cancel()
         idleWatch = null
+        offWrist.stop()
         HidDataSender.stop()
         hidTransactions?.close()
         hidTransactions = null

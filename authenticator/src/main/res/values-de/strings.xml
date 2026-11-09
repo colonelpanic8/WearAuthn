@@ -88,7 +88,12 @@
     <string name="session_timeout_five_minutes">5 Minuten</string>
     <string name="session_timeout_fifteen_minutes">15 Minuten</string>
     <string name="session_timeout_one_hour">1 Stunde</string>
-    <string name="session_timeout_until_turned_off">Bis zum Ausschalten</string>
+    <string name="session_timeout_four_hours">4 Stunden</string>
+    <string name="session_timeout_twelve_hours">12 Stunden</string>
+    <string name="session_timeout_until_turned_off">Ohne Zeitlimit</string>
+    <string name="preference_end_session_off_wrist_title">Nur beim Tragen</string>
+    <string name="preference_end_session_off_wrist_summary_on">Computer verlieren den Zugriff, wenn du die Uhr ablegst</string>
+    <string name="preference_end_session_off_wrist_summary_off">Computer behalten den Zugriff, wenn du die Uhr ablegst</string>
     <string name="preference_phone_always_ready_title">Immer für Telefon bereit</string>
     <string name="preference_phone_always_ready_summary_on">Ohne diese App vorher zu öffnen</string>
     <string name="preference_phone_always_ready_summary_off">Diese App vorher öffnen</string>

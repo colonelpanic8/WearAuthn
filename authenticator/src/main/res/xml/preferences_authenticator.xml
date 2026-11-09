@@ -49,6 +49,14 @@
             android:title="@string/preference_session_timeout_title" />
 
         <SwitchPreference
+            android:defaultValue="@bool/default_end_session_off_wrist"
+            android:key="@string/preference_end_session_off_wrist_key"
+            android:order="@integer/order_device_list_end_session_off_wrist"
+            android:summaryOff="@string/preference_end_session_off_wrist_summary_off"
+            android:summaryOn="@string/preference_end_session_off_wrist_summary_on"
+            android:title="@string/preference_end_session_off_wrist_title" />
+
+        <SwitchPreference
             android:defaultValue="@bool/default_phone_always_ready"
             android:key="@string/preference_phone_always_ready_key"
             android:order="@integer/order_device_list_phone_always_ready"
