@@ -3,6 +3,7 @@ package me.henneke.wearauthn.fido.ctap2
 import io.kotlintest.matchers.types.shouldBeInstanceOf
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
+import io.kotlintest.shouldThrow
 import io.kotlintest.specs.StringSpec
 
 
@@ -38,6 +39,30 @@ class CborDecodingTests : StringSpec({
     "Arrays decode correctly" {
         fromCbor("98190102030405060708090a0b0c0d0e0f101112131415161718181819".hex()) shouldBe CborArray(
             Array(25) { CborLong((it + 1).toLong()) })
+    }
+
+    "Declared lengths beyond the end of the input are rejected" {
+        fromCbor("5a7fffffff".hex()) shouldBe null
+        fromCbor("7a7fffffff".hex()) shouldBe null
+        fromCbor("9a7fffffff".hex()) shouldBe null
+        fromCbor("ba7fffffff".hex()) shouldBe null
+        fromCbor("820102".hex()) shouldBe CborArray(arrayOf(CborLong(1), CborLong(2)))
+        fromCbor("8201".hex()) shouldBe null
+        fromCbor("a201".hex()) shouldBe null
+    }
+
+    "Nesting is bounded" {
+        fromCbor(("81".repeat(16) + "00").hex()) shouldNotBe null
+        fromCbor(("81".repeat(17) + "00").hex()) shouldBe null
+        fromCbor(("81".repeat(4000) + "00").hex()) shouldBe null
+        fromCbor(("a100".repeat(17) + "00").hex()) shouldBe null
+    }
+
+    "Undefined cannot be unboxed" {
+        val params = fromCbor("a101f7".hex())
+        shouldThrow<CtapErrorException> {
+            params.getRequired(1).unbox<ByteArray>()
+        }.error shouldBe CtapError.CborUnexpectedType
     }
 
     "authenticatorMakeCredential request decodes correctly" {

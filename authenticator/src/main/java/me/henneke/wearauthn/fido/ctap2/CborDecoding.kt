@@ -3,26 +3,39 @@ package me.henneke.wearauthn.fido.ctap2
 import me.henneke.wearauthn.decodeToStringOrNull
 import kotlin.experimental.and
 
+// CTAP2 canonical CBOR nests at most four levels deep.
+private const val MAX_NESTING_DEPTH = 16
+
+private class ByteReader(private val bytes: ByteArray) : Iterator<Byte> {
+    private var position = 0
+
+    val remaining: Int
+        get() = bytes.size - position
+
+    override fun hasNext() = position < bytes.size
+
+    override fun next() = bytes[position++]
+}
 
 @ExperimentalUnsignedTypes
 fun fromCborToEnd(iter: Iterator<Byte>): CborValue? {
-    return fromCbor(iter).takeUnless { iter.hasNext() }
+    return fromCborToEnd(iter.asSequence().toList().toByteArray())
 }
 
 @ExperimentalUnsignedTypes
 fun fromCborToEnd(bytes: ByteArray): CborValue? {
-    return fromCborToEnd(bytes.iterator())
+    val reader = ByteReader(bytes)
+    return fromCbor(reader, 0).takeUnless { reader.hasNext() }
 }
 
 @ExperimentalUnsignedTypes
 fun fromCbor(bytes: Iterable<Byte>): CborValue? {
-    val iter = bytes.iterator()
-    return fromCbor(iter).takeUnless { iter.hasNext() }
+    return fromCborToEnd(bytes.iterator())
 }
 
 @ExperimentalUnsignedTypes
-private fun fromCbor(iter: Iterator<Byte>): CborValue? {
-    with(iter) {
+private fun fromCbor(reader: ByteReader, depth: Int): CborValue? {
+    with(reader) {
         if (!hasNext())
             return null
         val initialByte = next()
@@ -60,13 +73,9 @@ private fun fromCbor(iter: Iterator<Byte>): CborValue? {
                 else CborNegativeInteger(value)
             }
             MajorType.BYTE_STRING.value, MajorType.TEXT_STRING.value -> {
-                if (value > Int.MAX_VALUE.toULong())
+                if (value > remaining.toULong())
                     return null
-                val array = ByteArray(value.toInt()) {
-                    if (!hasNext())
-                        return null
-                    next()
-                }
+                val array = ByteArray(value.toInt()) { next() }
                 if (majorType == MajorType.BYTE_STRING.value) {
                     CborByteString(array)
                 } else {
@@ -74,23 +83,23 @@ private fun fromCbor(iter: Iterator<Byte>): CborValue? {
                 }
             }
             MajorType.ARRAY.value -> {
-                if (value > Int.MAX_VALUE.toULong())
+                if (depth >= MAX_NESTING_DEPTH || value > remaining.toULong())
                     return null
                 val array = Array(value.toInt()) {
-                    fromCbor(iter) ?: return null
+                    fromCbor(reader, depth + 1) ?: return null
                 }
                 CborArray(array)
             }
             MajorType.MAP.value -> {
-                if (value > Int.MAX_VALUE.toULong())
+                if (depth >= MAX_NESTING_DEPTH || value > (remaining / 2).toULong())
                     return null
                 val size = value.toInt()
                 val map = HashMap<CborValue, CborValue>(size)
                 repeat(size) {
-                    val key = fromCbor(this) ?: return null
+                    val key = fromCbor(reader, depth + 1) ?: return null
                     if (map.containsKey(key))
                         return null
-                    map[key] = fromCbor(this) ?: return null
+                    map[key] = fromCbor(reader, depth + 1) ?: return null
                 }
                 when {
                     map.keys.all { it is CborTextString } ->

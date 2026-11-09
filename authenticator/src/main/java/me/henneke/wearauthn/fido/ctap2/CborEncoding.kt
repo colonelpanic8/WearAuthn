@@ -184,10 +184,7 @@ object CborNull : CborBoxedValue<Nothing?> {
 }
 
 @ExperimentalUnsignedTypes
-object CborUndefined : CborBoxedValue<Nothing> {
-    override val value
-        get() = throw UninitializedPropertyAccessException()
-
+object CborUndefined : CborValue {
     override fun writeAsCbor(out: ByteArrayOutputStream) {
         out.write(SIMPLE_VALUE_UNDEFINED.toInt())
     }

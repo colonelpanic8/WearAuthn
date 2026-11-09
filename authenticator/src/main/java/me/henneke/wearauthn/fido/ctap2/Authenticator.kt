@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.fido.ctap2
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import me.henneke.wearauthn.*
 import me.henneke.wearauthn.fido.context.*
@@ -70,6 +71,11 @@ object Authenticator : Logging {
             }.also { v { "-> $it" } }.toCtapSuccessResponse()
         } catch (e: CtapErrorException) {
             byteArrayOf(e.error.value)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            w(e) { "Request failed unexpectedly" }
+            byteArrayOf(Other.value)
         } finally {
             context.status = AuthenticatorStatus.IDLE
         }
