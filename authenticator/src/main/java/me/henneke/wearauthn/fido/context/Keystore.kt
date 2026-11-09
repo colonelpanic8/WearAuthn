@@ -718,7 +718,9 @@ class WebAuthnCredential(
             )
         if (rawUserMap != null) {
             val userMap = fromCborToEnd(rawUserMap)
-            userDisplayName = userMap.getOptional("displayName")?.unbox()
+            userDisplayName =
+                (userMap.getOptional("userDisplayName") ?: userMap.getOptional("displayName"))
+                    ?.unbox()
             userName = userMap.getOptional("name")?.unbox()
             userIcon = userMap.getOptional("icon")?.unbox()
         }
