@@ -22,3 +22,8 @@ install:
 
 logs:
     adb logcat --pid="$(adb shell pidof me.henneke.wearauthn.authenticator.nightly)"
+
+# Render every @Preview under ui/ to authenticator/build/screenshots.
+screenshots:
+    ./gradlew :authenticator:testNightlyDebugUnitTest -Pscreenshots
+    @ls authenticator/build/screenshots

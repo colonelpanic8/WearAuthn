@@ -76,8 +76,21 @@ android {
         variant.resValue "string", "application_id", variant.applicationId
     }
     testOptions {
-        unitTests.all {
-            useJUnitPlatform()
+        unitTests {
+            includeAndroidResources = true
+            all {
+                useJUnitPlatform()
+                if (project.hasProperty("screenshots")) {
+                    filter { includeTestsMatching "me.henneke.wearauthn.ui.PreviewScreenshots" }
+                    systemProperty "roborazzi.test.record", "true"
+                    // Robolectric native graphics reads DirectByteBuffer addresses.
+                    jvmArgs "--add-opens=java.base/java.nio=ALL-UNNAMED"
+                    outputs.upToDateWhen { false }
+                    doFirst { delete layout.buildDirectory.dir("screenshots") }
+                } else {
+                    filter { excludeTestsMatching "me.henneke.wearauthn.ui.PreviewScreenshots" }
+                }
+            }
         }
     }
 }
@@ -112,7 +125,16 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
 
-    testImplementation 'junit:junit:4.13.1'
+    testImplementation 'junit:junit:4.13.2'
+    // The oldest vintage engine that parses JUnit 4.13.2's version string.
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.7.2'
+    testImplementation platform('androidx.compose:compose-bom:2026.06.01')
+    testImplementation 'androidx.compose.ui:ui-test-junit4'
+    testImplementation 'org.robolectric:robolectric:4.17'
+    testImplementation 'io.github.takahirom.roborazzi:roborazzi:1.78.0'
+    testImplementation 'io.github.takahirom.roborazzi:roborazzi-compose:1.78.0'
+    testImplementation 'io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:1.78.0'
+    testImplementation 'io.github.sergio-sastre.ComposablePreviewScanner:android:0.10.0'
     testImplementation 'io.kotlintest:kotlintest-runner-junit5:3.4.2'
     testImplementation 'org.slf4j:slf4j-nop:2.0.0-alpha1'
 }
