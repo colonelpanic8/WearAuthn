@@ -1,6 +1,7 @@
 package me.henneke.wearauthn.ui
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -21,12 +22,15 @@ import me.henneke.wearauthn.R
  * Starting it from the background is only allowed once the app holds the "display over other
  * apps" permission, so it is also offered through a full-screen notification that the user can
  * tap.
+ *
+ * On a locked watch it waits behind the lock screen. Approving a request takes the owner, and a
+ * locked watch may be off the wrist.
  */
 class PromptActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setShowWhenLocked(true)
+        setShowWhenLocked(getSystemService(KeyguardManager::class.java)?.isDeviceLocked != true)
         setTurnScreenOn(true)
         getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
         if (users == 0) {
