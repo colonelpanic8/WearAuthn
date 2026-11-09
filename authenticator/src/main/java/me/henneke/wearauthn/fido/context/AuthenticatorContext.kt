@@ -219,6 +219,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
 
     // We use cached credentials only over NFC, where low latency responses are very important
     private val useCachedCredential = !isHidTransport
+    @Volatile
     var status: AuthenticatorStatus = AuthenticatorStatus.IDLE
         set(value) {
             d { "Authenticator status changed: $value" }
@@ -507,6 +508,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             withContext(Dispatchers.Main) {
                 withTimeoutOrNull(HID_USER_PRESENCE_TIMEOUT_MS) {
                     suspendCancellableCoroutine<Boolean> { continuation ->
+                        continuation.invokeOnCancellation { ManageSpaceActivity.dismiss() }
                         val intent =
                             Intent(context, ManageSpaceActivity::class.java).apply {
                                 putExtra(

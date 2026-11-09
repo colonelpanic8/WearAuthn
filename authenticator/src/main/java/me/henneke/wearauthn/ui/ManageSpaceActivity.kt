@@ -3,6 +3,8 @@ package me.henneke.wearauthn.ui
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.ResultReceiver
 import android.support.wearable.view.AcceptDenyDialog
 import androidx.fragment.app.FragmentActivity
@@ -20,9 +22,18 @@ class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
     // Never cancelled: a deletion that has started has to finish and report its real outcome.
     override val coroutineContext: CoroutineContext = Dispatchers.Default + SupervisorJob()
 
+    private var deleting = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_space)
+        current = this
+    }
+
+    override fun onDestroy() {
+        if (current === this)
+            current = null
+        super.onDestroy()
     }
 
     override fun onStart() {
@@ -48,6 +59,7 @@ class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
     }
 
     private fun deleteAllData() {
+        deleting = true
         launch {
             AuthenticatorContext.deleteAllData(this@ManageSpaceActivity)
             withContext(Dispatchers.Main) {
@@ -74,5 +86,20 @@ class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
         intent.getParcelableExtra<ResultReceiver>(EXTRA_MANAGE_SPACE_RECEIVER)
             ?.send(resultCode, Bundle())
         finish()
+    }
+
+    companion object {
+        // Main thread only.
+        private var current: ManageSpaceActivity? = null
+
+        /**
+         * Closes the screen of a reset request that was abandoned, so that confirming it later
+         * cannot delete everything behind the client's back.
+         */
+        fun dismiss() {
+            Handler(Looper.getMainLooper()).post {
+                current?.takeUnless { it.deleting }?.returnResult(Activity.RESULT_CANCELED)
+            }
+        }
     }
 }
