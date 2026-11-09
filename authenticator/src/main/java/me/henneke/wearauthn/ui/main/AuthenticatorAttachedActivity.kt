@@ -94,7 +94,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         viewsToHideOnAmbient = listOf(binding.explanationView)
         binding.textClock.paint.isAntiAlias = false
 
-        AuthenticatorService.start(this)
+        AuthenticatorService.arm(this)
         hidDeviceProfile = HidDataSender.addListener(hidProfileListener)
     }
 

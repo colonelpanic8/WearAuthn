@@ -84,11 +84,15 @@
     <string name="notification_channel_hid">Bluetooth-Sicherheitsschlüssel</string>
     <string name="notification_hid_title">Bereit als Sicherheitsschlüssel</string>
     <string name="notification_action_turn_off">Ausschalten</string>
-    <string name="preference_session_timeout_title">Bereit bleiben</string>
+    <string name="preference_session_timeout_title">Für Computer bereit bleiben</string>
     <string name="session_timeout_five_minutes">5 Minuten</string>
     <string name="session_timeout_fifteen_minutes">15 Minuten</string>
     <string name="session_timeout_one_hour">1 Stunde</string>
     <string name="session_timeout_until_turned_off">Bis zum Ausschalten</string>
+    <string name="preference_phone_always_ready_title">Immer für Telefon bereit</string>
+    <string name="preference_phone_always_ready_summary_on">Ohne diese App vorher zu öffnen</string>
+    <string name="preference_phone_always_ready_summary_off">Diese App vorher öffnen</string>
+    <string name="notification_phone_title">Bereit für dein Telefon</string>
     <string name="notification_channel_prompt">Sicherheitsschlüssel-Anfragen</string>
     <string name="notification_prompt_title">Sicherheitsschlüssel-Anfrage – zum Prüfen tippen</string>
 </resources>

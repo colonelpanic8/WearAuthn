@@ -47,6 +47,14 @@
             android:order="@integer/order_device_list_session_timeout"
             android:summary="%s"
             android:title="@string/preference_session_timeout_title" />
+
+        <SwitchPreference
+            android:defaultValue="@bool/default_phone_always_ready"
+            android:key="@string/preference_phone_always_ready_key"
+            android:order="@integer/order_device_list_phone_always_ready"
+            android:summaryOff="@string/preference_phone_always_ready_summary_off"
+            android:summaryOn="@string/preference_phone_always_ready_summary_on"
+            android:title="@string/preference_phone_always_ready_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

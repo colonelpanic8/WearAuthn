@@ -46,6 +46,10 @@ WearAuthn can be used as a security key for your devices either via Bluetooth or
 
 In order to use WearAuthn with a Bluetooth-capable device, simply pair the device once from your watch's Bluetooth settings. Afterwards, launch WearAuthn and tap on your device in the list of paired Bluetooth devices. Once WearAuthn is "attached", the device will behave as if a USB security key were attached to it.
 
+Computers can only use WearAuthn while a session is running. Opening the app starts a session and reattaches to the device you used last. The session keeps running after you leave the app, and requests show up on top of whatever is on screen. It ends once no request has arrived for the time set under "Stay ready for computers" (15 minutes by default), when you tap "Turn off" in its notification, or when Bluetooth is turned off. Between sessions the watch does not page or stay connected to any computer, because that is what costs battery.
+
+A paired phone can reach WearAuthn at any time while "Always ready for phone" is on, which is the default. This starts a background service at boot that only waits for the phone to ask. The phone is connected to the watch anyway, so waiting uses no extra radio time. With the setting off, the phone can only ask during a session, and nothing runs between sessions.
+
 ### NFC
 
 Just hold your watch to your NFC-capable phone when you are asked to "Use your Security Key". WearAuthn does not have to be running for this to work, it suffices that your watch's screen is on. NFC will not be active while your watch's screen is in ambient or always-on mode.

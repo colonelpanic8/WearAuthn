@@ -23,7 +23,7 @@ class AuthenticatorActivity : WearablePreferenceActivity(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
-        AuthenticatorService.start(this)
+        AuthenticatorService.arm(this)
         launch {
             AuthenticatorContext.initAuthenticator(this@AuthenticatorActivity.applicationContext)
             AuthenticatorContext.refreshCachedWebAuthnCredentialIfNecessary(applicationContext)

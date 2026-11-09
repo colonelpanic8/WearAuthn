@@ -133,6 +133,12 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
             intent.`package` = BuildConfig.APPLICATION_ID
         }
         supportPreference = findPreference(getString(R.string.preference_support_key))
+        findPreference(getString(R.string.preference_phone_always_ready_key))
+            .setOnPreferenceChangeListener { _, _ ->
+                // Posted, because the new value is only stored once this listener returns.
+                view?.post { AuthenticatorService.applyPhoneSetting(view.context) }
+                true
+            }
         (findPreference(getString(R.string.preference_session_timeout_key)) as ListPreference).apply {
             entries = SessionTimeout.entries.map { getString(it.label) }.toTypedArray()
             entryValues = SessionTimeout.entries.map { it.preferenceValue }.toTypedArray()
@@ -213,7 +219,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
                     updateBluetoothStateAndDeviceEntries()
                     updateDiscoverableState()
                     observeHidDeviceProfile()
-                    AuthenticatorService.start(context)
+                    AuthenticatorService.arm(context)
                 } else {
                     activity.showToast(context.getString(R.string.status_bluetooth_permissions_required))
                 }
