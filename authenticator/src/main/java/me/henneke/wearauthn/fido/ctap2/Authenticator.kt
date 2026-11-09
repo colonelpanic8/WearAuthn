@@ -372,6 +372,10 @@ object Authenticator : Logging {
 
         // Step 7 (part 1)
         val useResidentKey = allowList == null
+        // Without an allow list the response names every account stored for the site, so it
+        // takes the user's consent. A silent request may only probe credentials it can name.
+        if (useResidentKey && !requireUserPresence && !requireUserVerification)
+            CTAP_ERR(UnsupportedOption, "Silent request without an allow list")
         val applicableCredentials = if (!useResidentKey) {
             check(allowList != null)
             if (allowList.isEmpty()) {
