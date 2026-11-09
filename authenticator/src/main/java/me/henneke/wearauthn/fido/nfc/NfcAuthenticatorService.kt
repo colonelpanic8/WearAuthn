@@ -92,7 +92,13 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
                 v { "-> ${Hex.bytesToStringUppercase(it)}" }
             }
         }
-        val apdu = CommandApdu(rawCommandApdu)
+        val apdu = try {
+            CommandApdu(rawCommandApdu)
+        } catch (e: ApduException) {
+            return e.statusWord.value.asByteArray().also {
+                v { "-> ${Hex.bytesToStringUppercase(it)}" }
+            }
+        }
         if (apdu.headerEquals(DESELECT_FIDO_APDU_HEADER)) {
             isSelected = false
             return StatusWord.NO_ERROR.value.asByteArray().also {
