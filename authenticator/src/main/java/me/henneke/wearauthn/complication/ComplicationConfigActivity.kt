@@ -19,11 +19,12 @@ class ComplicationConfigActivity : WearablePreferenceActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val shortcutPicker = ShortcutPicker().apply {
-            arguments = intent.extras
-            check(arguments.containsKey(ComplicationProviderService.EXTRA_CONFIG_COMPLICATION_ID)) { "No complication ID provided." }
+        val extras = intent.extras
+        if (extras?.containsKey(ComplicationProviderService.EXTRA_CONFIG_COMPLICATION_ID) != true) {
+            finish()
+            return
         }
-        startPreferenceFragment(shortcutPicker, false)
+        startPreferenceFragment(ShortcutPicker().apply { arguments = extras }, false)
     }
 }
 
