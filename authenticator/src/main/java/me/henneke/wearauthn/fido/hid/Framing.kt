@@ -645,6 +645,10 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
             )
                 v { "-> ${Hex.bytesToStringUppercase(bytes)}" }
             return handleError(hidException, submit)
+        } catch (e: Exception) {
+            // Reports arrive on a binder thread, where an uncaught exception ends the process.
+            e(e) { "Failed to handle a report" }
+            resetTransaction()
         }
     }
 
