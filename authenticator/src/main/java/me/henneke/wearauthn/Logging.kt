@@ -46,7 +46,7 @@ interface Logging {
 
     companion object {
         fun init(context: Context, value: String? = null) {
-            minimumLogLevel = if (context.isDeveloperModeEnabled)
+            minimumLogLevel = if (context.isDeveloperModeEnabled || BuildConfig.DEBUG)
                 LogLevel.safeValueOf(
                     value ?: context.defaultSharedPreferences.getString(
                         context.getString(R.string.preference_log_level_key),
@@ -55,6 +55,7 @@ interface Logging {
                 )
             else
                 LogLevel.Disabled
+            Log.i("WearAuthn", "Log level: $minimumLogLevel (developer mode: ${context.isDeveloperModeEnabled})")
         }
 
         // Functions below should be inline, but that results in the following failure at runtime:
