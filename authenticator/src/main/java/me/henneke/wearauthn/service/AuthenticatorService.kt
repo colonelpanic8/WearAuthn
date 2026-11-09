@@ -139,6 +139,7 @@ class AuthenticatorService : Service(), CoroutineScope {
         HidDataSender.removeListener(profileListener)
         rfcommAuthenticator?.stop()
         HidDataSender.stop()
+        transactionManager.close()
         cancel()
         super.onDestroy()
     }

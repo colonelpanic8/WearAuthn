@@ -253,17 +253,46 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
         check(authenticatorContext.isHidTransport)
     }
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
+    // Guards all state below: reports arrive on binder threads, timeouts fire on the main
+    // thread and CBOR requests finish on Dispatchers.IO.
+    private val lock = Any()
+
+    private var closed = false
     private var message: InMessage? = null
     private var activeCborJob: Job? = null
     private var freeChannelId: UInt = 1u
 
-    private val timeoutHandler = Handler(Looper.getMainLooper())
+    /** A main thread timer whose callback runs under [lock], and not at all once halted. */
+    private inner class Timeout(private val delayMs: Long) {
+        private val handler = Handler(Looper.getMainLooper())
+        private var armed: Any? = null
+
+        fun arm(onTimeout: () -> Unit) {
+            halt()
+            val token = Any()
+            armed = token
+            handler.postDelayed({
+                synchronized(lock) {
+                    if (armed === token) {
+                        armed = null
+                        onTimeout()
+                    }
+                }
+            }, delayMs)
+        }
+
+        fun halt() {
+            armed = null
+            handler.removeCallbacksAndMessages(null)
+        }
+    }
+
+    private val contTimeout = Timeout(HID_CONT_TIMEOUT_MS)
 
     private fun startTimeout(submit: (rawReports: Iterable<ByteArray>) -> Unit) {
-        timeoutHandler.postDelayed({
+        contTimeout.arm {
             message?.let {
                 submit(
                     OutMessage.ErrorResponse(
@@ -273,17 +302,35 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                 )
             }
             message = null
-        }, HID_CONT_TIMEOUT_MS)
+        }
     }
 
     private fun haltTimeout() {
-        timeoutHandler.removeCallbacksAndMessages(null)
+        contTimeout.halt()
     }
 
     private fun resetTransaction() {
         haltTimeout()
         message = null
+        activeCborJob?.cancel()
         activeCborJob = null
+    }
+
+    private inline fun ifActive(transaction: InMessage, block: () -> Unit) {
+        synchronized(lock) {
+            if (message === transaction)
+                block()
+        }
+    }
+
+    /** Abandons whatever is in flight. Reports that arrive afterwards are dropped. */
+    fun close() {
+        synchronized(lock) {
+            closed = true
+            resetTransaction()
+            resetU2fContinuation()
+        }
+        coroutineContext.cancel()
     }
 
     private fun handleError(
@@ -307,17 +354,16 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
     )
 
     private var activeU2fConfirmation: U2fContinuation? = null
-    private val u2fRetryTimeoutHandler = Handler(Looper.getMainLooper())
+    private val u2fRetryTimeout = Timeout(HID_MSG_TIMEOUT_MS)
     private fun rearmU2fRetryTimeout() {
-        haltU2fRetryTimeout()
-        u2fRetryTimeoutHandler.postDelayed({
+        u2fRetryTimeout.arm {
             i { "Request requiring user confirmation timed out" }
             resetU2fContinuation()
-        }, HID_MSG_TIMEOUT_MS)
+        }
     }
 
     private fun haltU2fRetryTimeout() {
-        u2fRetryTimeoutHandler.removeCallbacksAndMessages(null)
+        u2fRetryTimeout.halt()
     }
 
     private fun resetU2fContinuation() {
@@ -438,15 +484,15 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                 }
                 CtapHidCommand.Cbor -> {
                     activeCborJob = launch {
-                        try {
-                            val keepaliveJob = launch(Dispatchers.Default) {
-                                while (true) {
-                                    delay(HID_KEEPALIVE_INTERVAL_MS)
-                                    val status = when (authenticatorContext.status) {
-                                        AuthenticatorStatus.IDLE,
-                                        AuthenticatorStatus.PROCESSING -> CtapHidStatus.PROCESSING
-                                        AuthenticatorStatus.WAITING_FOR_UP -> CtapHidStatus.UPNEEDED
-                                    }
+                        val keepaliveJob = launch(Dispatchers.Default) {
+                            while (true) {
+                                delay(HID_KEEPALIVE_INTERVAL_MS)
+                                val status = when (authenticatorContext.status) {
+                                    AuthenticatorStatus.IDLE,
+                                    AuthenticatorStatus.PROCESSING -> CtapHidStatus.PROCESSING
+                                    AuthenticatorStatus.WAITING_FOR_UP -> CtapHidStatus.UPNEEDED
+                                }
+                                ifActive(message) {
                                     submit(
                                         OutMessage.KeepaliveResponse(
                                             message.channelId,
@@ -455,24 +501,23 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                     )
                                 }
                             }
-                            val responsePayload =
-                                Ctap2Authenticator.handle(authenticatorContext, payload)
-                            keepaliveJob.cancelAndJoin()
+                        }
+                        val responsePayload = try {
+                            Ctap2Authenticator.handle(authenticatorContext, payload)
+                        } catch (e: CancellationException) {
+                            i { "Current transaction was cancelled" }
+                            byteArrayOf(CtapError.KeepaliveCancel.value)
+                        } finally {
+                            keepaliveJob.cancel()
+                        }
+                        // An aborted transaction no longer owns the channel and gets no answer.
+                        ifActive(message) {
                             submit(
                                 OutMessage.CborResponse(
                                     message.channelId,
                                     responsePayload
                                 ).toRawReports()
                             )
-                        } catch (e: CancellationException) {
-                            submit(
-                                OutMessage.CborResponse(
-                                    message.channelId,
-                                    byteArrayOf(CtapError.KeepaliveCancel.value)
-                                ).toRawReports()
-                            )
-                            i { "Current transaction was cancelled by the client" }
-                        } finally {
                             resetTransaction()
                         }
                     }
@@ -489,6 +534,16 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
     }
 
     fun handleReport(bytes: ByteArray, submit: (rawReports: Iterable<ByteArray>) -> Unit) {
+        synchronized(lock) {
+            if (!closed)
+                handleReportLocked(bytes, submit)
+        }
+    }
+
+    private fun handleReportLocked(
+        bytes: ByteArray,
+        submit: (rawReports: Iterable<ByteArray>) -> Unit
+    ) {
         try {
             val packet = Packet.parse(bytes)
             v { "-> $packet" }
