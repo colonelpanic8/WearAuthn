@@ -18,3 +18,5 @@ jobs:
           distribution: 'zulu'
       - name: Build with Gradle
         run: ./gradlew buildPlayStoreDebug
+      - name: Build and test what a release tag ships
+        run: ./gradlew :authenticator:testNightlyReleaseUnitTest :authenticator:assembleNightlyRelease
