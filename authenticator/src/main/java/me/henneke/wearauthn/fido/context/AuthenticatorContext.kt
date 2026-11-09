@@ -373,27 +373,14 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             withTimeoutOrNull(HID_USER_PRESENCE_TIMEOUT_MS) {
                 suspendCancellableCoroutine<Unit> { continuation ->
                     continuation.invokeOnCancellation { ConfirmDeviceCredentialActivity.dismiss() }
-                    val intent =
-                        Intent(context, ConfirmDeviceCredentialActivity::class.java).apply {
-                            putExtra(
-                                EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER,
-                                object : ResultReceiver(Handler()) {
-                                    override fun onReceiveResult(
-                                        resultCode: Int,
-                                        resultData: Bundle?
-                                    ) {
-                                        if (continuation.isActive)
-                                            continuation.resume(Unit)
-                                    }
-                                })
-                            // Starting with Android P (due to a bug, Oreo is excepted),
-                            // FLAG_ACTIVITY_NEW_TASK needs to be set when launching an activity
-                            // from a non-activity context.
-                            // https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-wear-9.0.0_r14/core/java/android/app/ContextImpl.java#907
-                            if (context !is Activity)
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                    context.startActivity(intent)
+                    ConfirmDeviceCredentialActivity.start(
+                        context,
+                        object : ResultReceiver(Handler()) {
+                            override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+                                if (continuation.isActive)
+                                    continuation.resume(Unit)
+                            }
+                        })
                 }
             }
             winkJob.cancel()

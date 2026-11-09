@@ -48,7 +48,6 @@ import me.henneke.wearauthn.service.AuthenticatorService
 import me.henneke.wearauthn.service.SessionTimeout
 import me.henneke.wearauthn.sync.UnlockComplicationListenerService
 import me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity
-import me.henneke.wearauthn.ui.EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER
 import me.henneke.wearauthn.ui.bluetoothAdapter
 import me.henneke.wearauthn.ui.defaultSharedPreferences
 import me.henneke.wearauthn.ui.hasBluetoothPermissions
@@ -392,24 +391,17 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
                                     )
                                 )
                                 setPositiveButton { _, _ ->
-                                    val intent =
-                                        Intent(
-                                            context,
-                                            ConfirmDeviceCredentialActivity::class.java
-                                        ).apply {
-                                            putExtra(
-                                                EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER,
-                                                object : ResultReceiver(Handler()) {
-                                                    override fun onReceiveResult(
-                                                        resultCode: Int,
-                                                        resultData: Bundle?
-                                                    ) {
-                                                        if (resultCode == Activity.RESULT_OK)
-                                                            armUserVerificationFuse(context)
-                                                    }
-                                                })
-                                        }
-                                    context.startActivity(intent)
+                                    ConfirmDeviceCredentialActivity.start(
+                                        context,
+                                        object : ResultReceiver(Handler()) {
+                                            override fun onReceiveResult(
+                                                resultCode: Int,
+                                                resultData: Bundle?
+                                            ) {
+                                                if (resultCode == Activity.RESULT_OK)
+                                                    armUserVerificationFuse(context)
+                                            }
+                                        })
                                 }
                                 setNegativeButton { _, _ -> updateUserVerificationPreferencesState() }
                                 setOnCancelListener { updateUserVerificationPreferencesState() }
@@ -441,29 +433,16 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
                 summary = getString(R.string.preference_manage_credentials_summary_disabled)
             }
             setOnPreferenceClickListener {
-                val intent =
-                    Intent(
-                        context,
-                        ConfirmDeviceCredentialActivity::class.java
-                    ).apply {
-                        putExtra(
-                            EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER,
-                            object : ResultReceiver(Handler()) {
-                                override fun onReceiveResult(
-                                    resultCode: Int,
-                                    resultData: Bundle?
-                                ) {
-                                    if (resultCode == Activity.RESULT_OK)
-                                        context.startActivity(
-                                            Intent(
-                                                context,
-                                                ResidentCredentialsList::class.java
-                                            )
-                                        )
-                                }
-                            })
-                    }
-                context.startActivity(intent)
+                ConfirmDeviceCredentialActivity.start(
+                    context,
+                    object : ResultReceiver(Handler()) {
+                        override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+                            if (resultCode == Activity.RESULT_OK)
+                                context.startActivity(
+                                    Intent(context, ResidentCredentialsList::class.java)
+                                )
+                        }
+                    })
                 true
             }
         }
