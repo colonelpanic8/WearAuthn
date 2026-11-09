@@ -44,10 +44,12 @@ private String makeVersionName() {
 }
 
 private int getNightlyVersionCode() {
+    if (System.getenv("WEARAUTHN_VERSION_CODE")) return System.getenv("WEARAUTHN_VERSION_CODE").toInteger()
     return project.hasProperty("commitCount") ? project.commitCount.toInteger() * 10: 0
 }
 
 private String getNightlyVersionName() {
+    if (System.getenv("WEARAUTHN_VERSION_NAME")) return System.getenv("WEARAUTHN_VERSION_NAME")
     return project.hasProperty("commitHash") ? "nightly-" + project.commitHash : ""
 }
 

@@ -14,6 +14,15 @@ android {
             keyAlias 'key0'
             keyPassword 'hunter2'
         }
+        if (System.getenv("ANDROID_KEYSTORE_FILE")) {
+            releaseSign {
+                storeFile file(System.getenv("ANDROID_KEYSTORE_FILE"))
+                storeType "pkcs12"
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
         nightlySign {
             storeFile file('../nightly_keystore.jks')
             storePassword project.hasProperty("storePassword") ? project.storePassword : ""
@@ -34,7 +43,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.testSign
+            signingConfig System.getenv("ANDROID_KEYSTORE_FILE") ? signingConfigs.releaseSign : signingConfigs.testSign
         }
         debug {
             minifyEnabled false
