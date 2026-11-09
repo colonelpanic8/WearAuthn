@@ -5,10 +5,13 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothProfile
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.IBinder
 import android.os.SystemClock
@@ -84,6 +87,16 @@ class AuthenticatorService : Service(), CoroutineScope {
         override fun onServiceStateChanged(proxy: BluetoothProfile?) {}
     }
 
+    private val bluetoothStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+            if (state != BluetoothAdapter.STATE_ON) {
+                i { "Bluetooth is no longer on; ending session" }
+                stopSelf()
+            }
+        }
+    }
+
     private var lastHostAddress: String?
         get() = defaultSharedPreferences.getString(PREF_LAST_HOST, null)
         set(value) = defaultSharedPreferences.edit().putString(PREF_LAST_HOST, value).apply()
@@ -110,6 +123,10 @@ class AuthenticatorService : Service(), CoroutineScope {
                     it.start()
                 }
         }
+        registerReceiver(
+            bluetoothStateReceiver,
+            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        )
         watchIdleTime()
     }
 
@@ -126,6 +143,7 @@ class AuthenticatorService : Service(), CoroutineScope {
     }
 
     override fun onDestroy() {
+        unregisterReceiver(bluetoothStateReceiver)
         HidDataSender.removeListener(profileListener)
         rfcommAuthenticator?.stop()
         HidDataSender.stop()
@@ -213,7 +231,7 @@ class AuthenticatorService : Service(), CoroutineScope {
         private const val MAX_IDLE_CHECK_INTERVAL_MS = 60_000L
 
         fun start(context: Context) {
-            if (!context.hasBluetoothPermissions)
+            if (!context.hasBluetoothPermissions || context.bluetoothAdapter?.isEnabled != true)
                 return
             try {
                 ContextCompat.startForegroundService(
