@@ -17,8 +17,7 @@ import me.henneke.wearauthn.fido.context.checkAllKeysInHardware
 import kotlin.coroutines.CoroutineContext
 
 class AboutActivity : WearableActivity(), CoroutineScope {
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
     private lateinit var binding: ActivityAboutBinding
 

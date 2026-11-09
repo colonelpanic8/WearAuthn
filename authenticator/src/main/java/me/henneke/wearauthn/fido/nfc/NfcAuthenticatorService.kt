@@ -32,8 +32,9 @@ import me.henneke.wearauthn.fido.u2f.Request as U2fRequest
 @ExperimentalUnsignedTypes
 class NfcAuthenticatorService : HostApduService(), CoroutineScope {
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
+    // Never cancelled: the service is unbound after every tap, while the credential screen
+    // that a tap asks for has to stay up.
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
     private val SELECT_FIDO_APDUS = setOf(
         ubyteArrayOf(
@@ -188,11 +189,6 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
                 authenticatorContext.confirmDeviceCredential()
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        coroutineContext.cancelChildren()
     }
 
     private fun initiateVibration() {

@@ -30,6 +30,7 @@ import android.view.View
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import me.henneke.wearauthn.BuildConfig
 import me.henneke.wearauthn.LogLevel
@@ -61,8 +62,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
 
     override val TAG = "AuthenticatorMainMenu"
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
     private var hidDeviceProfile: HidDeviceProfile? = null
 
@@ -169,6 +169,11 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
     override fun onPause() {
         super.onPause()
         context?.unregisterReceiver(bluetoothBroadcastReceiver)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        coroutineContext.cancelChildren()
     }
 
     override fun onDetach() {

@@ -17,8 +17,8 @@ const val EXTRA_MANAGE_SPACE_RECEIVER = "me.henneke.wearauthn.common.EXTRA_MANAG
 @ExperimentalUnsignedTypes
 class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Default + SupervisorJob()
+    // Never cancelled: a deletion that has started has to finish and report its real outcome.
+    override val coroutineContext: CoroutineContext = Dispatchers.Default + SupervisorJob()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,34 +47,25 @@ class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
         }.show()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        coroutineContext.cancelChildren()
-    }
-
     private fun deleteAllData() {
         launch {
-            try {
-                AuthenticatorContext.deleteAllData(this@ManageSpaceActivity)
-                withContext(Dispatchers.Main) {
-                    startActivity(
-                        Intent(
-                            this@ManageSpaceActivity,
-                            ConfirmationActivity::class.java
-                        ).apply {
-                            putExtra(
-                                ConfirmationActivity.EXTRA_ANIMATION_TYPE,
-                                ConfirmationActivity.SUCCESS_ANIMATION
-                            )
-                            putExtra(
-                                ConfirmationActivity.EXTRA_MESSAGE,
-                                getString(R.string.message_deleted_all_data)
-                            )
-                        })
-                    returnResult(Activity.RESULT_OK)
-                }
-            } catch (e: CancellationException) {
-                returnResult(Activity.RESULT_CANCELED)
+            AuthenticatorContext.deleteAllData(this@ManageSpaceActivity)
+            withContext(Dispatchers.Main) {
+                startActivity(
+                    Intent(
+                        this@ManageSpaceActivity,
+                        ConfirmationActivity::class.java
+                    ).apply {
+                        putExtra(
+                            ConfirmationActivity.EXTRA_ANIMATION_TYPE,
+                            ConfirmationActivity.SUCCESS_ANIMATION
+                        )
+                        putExtra(
+                            ConfirmationActivity.EXTRA_MESSAGE,
+                            getString(R.string.message_deleted_all_data)
+                        )
+                    })
+                returnResult(Activity.RESULT_OK)
             }
         }
     }

@@ -13,8 +13,7 @@ class AuthenticatorActivity : WearablePreferenceActivity(), CoroutineScope {
 
     private var hasUpdatedInAmbientMode = false
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
