@@ -21,6 +21,7 @@ class HidAuthenticatorContext(
     context: Context,
     private val obtainActivity: suspend () -> Activity,
     private val releaseActivity: suspend () -> Unit = {},
+    override val confirmsAbsentCredentials: Boolean = true,
 ) : AuthenticatorContext(context, isHidTransport = true) {
 
     override suspend fun dialogContext(): Context = obtainActivity()

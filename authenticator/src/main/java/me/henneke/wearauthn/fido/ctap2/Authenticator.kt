@@ -364,13 +364,6 @@ object Authenticator : Logging {
         if (requireUserVerification && context.getUserVerificationState() != true)
             CTAP_ERR(UnsupportedOption)
 
-        // Step 6
-        if (requireUserVerification && !context.verifyUser())
-            CTAP_ERR(OperationDenied)
-
-        // At this point, user verification has been performed if requested.
-        val userVerified = requireUserVerification
-
         // Step 7 (part 1)
         val useResidentKey = allowList == null
         val applicableCredentials = if (!useResidentKey) {
@@ -408,12 +401,32 @@ object Authenticator : Logging {
         val numberOfCredentials = credentialsToUse.size
         i { "Continuing with $numberOfCredentials credentials" }
 
+        // Step 7, case of no credentials. User verification cannot change the outcome, so it is
+        // skipped. Over Bluetooth HID, a presence check has to come first to remain compatible
+        // with CTAP 2 and Chromium.
+        // https://source.chromium.org/chromium/chromium/src/+/master:device/fido/get_assertion_request_handler.cc;l=69;drc=c4d7a7f9940c98c7c00442b883dc6b442875ee1e
+        if (numberOfCredentials == 0) {
+            val requestInfo = context.makeCtap2RequestInfo(AUTHENTICATE_NO_CREDENTIALS, rpId)
+            if (requireUserPresence && context.confirmsAbsentCredentials &&
+                context.confirmRequestWithUser(requestInfo) != true
+            )
+                CTAP_ERR(OperationDenied)
+            context.notifyUser(requestInfo)
+            CTAP_ERR(NoCredentials)
+        }
+
+        // Step 6
+        if (requireUserVerification && !context.verifyUser())
+            CTAP_ERR(OperationDenied)
+
+        // At this point, user verification has been performed if requested.
+        val userVerified = requireUserVerification
+
         // Step 8
 
         // txAuthSimple leads to a prompt that the user has to confirm. This prompt has to be shown
-        // before the usual user presence check as per spec, but we omit it if there are no
-        // applicable credentials.
-        if (activeExtensions.containsKey(Extension.TxAuthSimple) && numberOfCredentials > 0) {
+        // before the usual user presence check as per spec.
+        if (activeExtensions.containsKey(Extension.TxAuthSimple)) {
             val txAuthSimpleInput =
                 activeExtensions[Extension.TxAuthSimple] as TxAuthSimpleAuthenticateInput
             // The actual prompt confirmed by the user differs from the requested prompt only by
@@ -441,34 +454,21 @@ object Authenticator : Logging {
             }
         }
 
-        val requestInfo = if (numberOfCredentials > 0) {
-            val firstCredential = credentialsToUse.first() as? WebAuthnCredential
-            val singleCredential = numberOfCredentials == 1
-            check(!singleCredential implies useResidentKey)
-            context.makeCtap2RequestInfo(
-                action = AUTHENTICATE,
-                rpId = rpId,
-                rpName = firstCredential?.rpName,
-                userName = if (singleCredential) firstCredential?.userName else null,
-                userDisplayName = if (singleCredential) firstCredential?.userDisplayName else null,
-                addResidentKeyHint = !singleCredential
-            )
-        } else {
-            // We have not found any credentials, ask the user for permission to reveal this fact.
-            context.makeCtap2RequestInfo(AUTHENTICATE_NO_CREDENTIALS, rpId)
-        }
+        val firstCredential = credentialsToUse.first() as? WebAuthnCredential
+        val singleCredential = numberOfCredentials == 1
+        check(!singleCredential implies useResidentKey)
+        val requestInfo = context.makeCtap2RequestInfo(
+            action = AUTHENTICATE,
+            rpId = rpId,
+            rpName = firstCredential?.rpName,
+            userName = if (singleCredential) firstCredential?.userName else null,
+            userDisplayName = if (singleCredential) firstCredential?.userDisplayName else null,
+            addResidentKeyHint = !singleCredential
+        )
         if (requireUserPresence && context.confirmRequestWithUser(requestInfo) != true)
             CTAP_ERR(OperationDenied)
         if (!requireUserPresence)
             i { "Processing silent GetAssertion request" }
-
-        // Step 7, case of no credentials: Has to be performed *after* a presence check to remain
-        // compatible with CTAP 2 and Chromium.
-        // https://source.chromium.org/chromium/chromium/src/+/master:device/fido/get_assertion_request_handler.cc;l=69;drc=c4d7a7f9940c98c7c00442b883dc6b442875ee1e
-        if (numberOfCredentials == 0) {
-            context.notifyUser(requestInfo)
-            CTAP_ERR(NoCredentials)
-        }
 
         // Step 9
         // At this point, user presence and verification have been performed if requested.

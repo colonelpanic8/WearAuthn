@@ -202,6 +202,13 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
     abstract suspend fun confirmRequestWithUser(info: RequestInfo): Boolean?
     abstract suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String?
 
+    /**
+     * Whether the user has to approve telling a client that none of the requested credentials
+     * are stored. Clients that send each request to several authenticators need this to wait
+     * for the one the user actually touches.
+     */
+    open val confirmsAbsentCredentials: Boolean = true
+
     /** Context used to show dialogs; must be an activity. */
     protected open suspend fun dialogContext(): Context = context
 

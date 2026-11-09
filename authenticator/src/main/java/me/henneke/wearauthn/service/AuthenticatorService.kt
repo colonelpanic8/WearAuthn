@@ -115,7 +115,14 @@ class AuthenticatorService : Service(), CoroutineScope {
         transactionManager = TransactionManager(authenticatorContext)
         HidDataSender.register(this, profileListener, ioListener)
         bluetoothAdapter?.let { adapter ->
-            rfcommAuthenticator = RfcommAuthenticator(adapter, authenticatorContext, this).also {
+            // Phones ask for one credential at a time and only talk to the watch.
+            val rfcommContext = HidAuthenticatorContext(
+                this,
+                obtainActivity = { PromptActivity.obtain(this) },
+                releaseActivity = { PromptActivity.release() },
+                confirmsAbsentCredentials = false,
+            )
+            rfcommAuthenticator = RfcommAuthenticator(adapter, rfcommContext, this).also {
                 it.start()
             }
         }
