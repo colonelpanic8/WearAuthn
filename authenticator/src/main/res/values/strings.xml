@@ -95,6 +95,13 @@
     <string name="status_bluetooth_permissions_required">Bluetooth permission not granted</string>
     <string name="notification_channel_hid">Bluetooth security key</string>
     <string name="notification_hid_title">Ready as a security key</string>
+    <string name="notification_action_turn_off">Turn off</string>
+    <string name="preference_session_timeout_key" translatable="false">preference_session_timeout</string>
+    <string name="preference_session_timeout_title">Stay ready</string>
+    <string name="session_timeout_five_minutes">5 minutes</string>
+    <string name="session_timeout_fifteen_minutes">15 minutes</string>
+    <string name="session_timeout_one_hour">1 hour</string>
+    <string name="session_timeout_until_turned_off">Until turned off</string>
     <string name="notification_channel_prompt">Security key requests</string>
     <string name="notification_prompt_title">Security key request – tap to review</string>
 </resources>

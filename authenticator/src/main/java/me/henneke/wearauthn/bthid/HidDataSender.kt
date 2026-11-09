@@ -109,67 +109,28 @@ object HidDataSender {
     interface ProfileListener : HidDeviceApp.DeviceStateListener,
         HidDeviceProfile.ServiceStateListener
 
-    /**
-     * Ensure that the HID Device SDP record is registered and start listening for the profile proxy
-     * and HID Host connection state changes.
-     *
-     * @param context Context that is required to get the HID profile proxy.
-     * @param profileListener Callback that will receive the profile events.
-     * @param ioListener Callback that will receive requests from connected devices.
-     * @return Interface for managing the paired HID Host devices.
-     */
-    fun register(
-        context: Context,
-        profileListener: ProfileListener,
-        ioListener: HidIntrDataListener?
-    ): HidDeviceProfile {
+    /** Registers the HID Device app. Only the service that owns the session calls this. */
+    fun start(context: Context, ioListener: HidIntrDataListener) {
         synchronized(lock) {
-            if (ioListener != null) {
-                this.ioListener = ioListener
-                hidDeviceApp.registerIoListener(ioListener)
-            }
-
-            if (!profileListeners.add(profileListener)) {
-                // This user is already registered
-                return hidDeviceProfile
-            }
-            if (profileListeners.size > 1) {
-                // There are already some users
-                return hidDeviceProfile
-            }
-
+            if (this.ioListener != null)
+                return
+            this.ioListener = ioListener
+            hidDeviceApp.registerIoListener(ioListener)
             hidDeviceProfile.registerServiceListener(
                 context.applicationContext,
                 managingProfileListener
             )
             hidDeviceApp.registerDeviceListener(managingProfileListener)
         }
-        return hidDeviceProfile
     }
 
-    /**
-     * Stop listening for the profile events. When the last profileListener is unregistered, the SD record
-     * for HID Device will also be unregistered.
-     *
-     * @param profileListener Callback for profile events.
-     * @param ioListener Callback for device requests.
-     */
-    fun unregister(profileListener: ProfileListener, ioListener: HidIntrDataListener?) {
+    /** Drops the connection, unregisters the app and tells observers it is gone. */
+    fun stop() {
         synchronized(lock) {
-            if (this.ioListener == ioListener) {
-                this.ioListener = null
-                hidDeviceApp.unregisterIoListener()
-            }
-
-            if (!profileListeners.remove(profileListener)) {
-                // This user was removed before
+            if (ioListener == null)
                 return
-            }
-            if (!profileListeners.isEmpty()) {
-                // Some users are still left
-                return
-            }
-
+            ioListener = null
+            hidDeviceApp.unregisterIoListener()
             hidDeviceApp.unregisterDeviceListener()
 
             for (device in hidDeviceProfile.connectedDevices) {
@@ -183,8 +144,31 @@ object HidDataSender {
 
             connectedDevice = null
             waitingForDevice = null
+            isAppRegistered = false
+
+            // Observers also hear this when registration never completed, so the UI closes.
+            for (listener in profileListeners.toList()) {
+                listener.onAppStatusChanged(false)
+            }
         }
     }
+
+    fun addListener(listener: ProfileListener): HidDeviceProfile {
+        synchronized(lock) {
+            profileListeners.add(listener)
+        }
+        return hidDeviceProfile
+    }
+
+    fun removeListener(listener: ProfileListener) {
+        synchronized(lock) {
+            profileListeners.remove(listener)
+        }
+    }
+
+    /** A host is connected or a connection attempt is pending. */
+    val hasTarget: Boolean
+        get() = synchronized(lock) { connectedDevice != null || waitingForDevice != null }
 
     /**
      * Initiate connection sequence for the specified HID Host. If another device is already
@@ -194,18 +178,20 @@ object HidDataSender {
      * @param device New HID Host to connect to or `null` to disconnect.
      */
     fun requestConnect(device: BluetoothDevice?) {
-        waitingForDevice = device
-        if (!isAppRegistered) {
-            // Request will be fulfilled as soon as the app becomes registered.
-            return
-        }
+        synchronized(lock) {
+            waitingForDevice = device
+            if (!isAppRegistered) {
+                // Request will be fulfilled as soon as the app becomes registered.
+                return
+            }
 
-        connectedDevice = null
-        updateDeviceList()
+            connectedDevice = null
+            updateDeviceList()
 
-        if (device != null && device == connectedDevice) {
-            for (listener in profileListeners) {
-                listener.onConnectionStateChanged(device, BluetoothProfile.STATE_CONNECTED)
+            if (device != null && device == connectedDevice) {
+                for (listener in profileListeners) {
+                    listener.onConnectionStateChanged(device, BluetoothProfile.STATE_CONNECTED)
+                }
             }
         }
     }

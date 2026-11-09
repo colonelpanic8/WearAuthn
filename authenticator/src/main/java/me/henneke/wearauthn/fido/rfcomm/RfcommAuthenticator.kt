@@ -38,6 +38,7 @@ class RfcommAuthenticator(
     private val adapter: BluetoothAdapter,
     private val authenticatorContext: AuthenticatorContext,
     private val scope: CoroutineScope,
+    private val onFrame: () -> Unit,
 ) {
     private var serverSocket: BluetoothServerSocket? = null
     private var acceptJob: Job? = null
@@ -92,6 +93,7 @@ class RfcommAuthenticator(
                         throw IOException("Invalid frame length $length")
                     val request = ByteArray(length)
                     runInterruptible { input.readFully(request) }
+                    onFrame()
                     val response = requestLock.withLock { session.handle(request) }
                     runInterruptible {
                         output.writeInt(response.size)

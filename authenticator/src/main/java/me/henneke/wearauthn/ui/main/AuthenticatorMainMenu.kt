@@ -44,6 +44,8 @@ import me.henneke.wearauthn.fido.context.armUserVerificationFuse
 import me.henneke.wearauthn.fido.context.getUserVerificationState
 import me.henneke.wearauthn.i
 import me.henneke.wearauthn.isDeveloperModeEnabled
+import me.henneke.wearauthn.service.AuthenticatorService
+import me.henneke.wearauthn.service.SessionTimeout
 import me.henneke.wearauthn.sync.UnlockComplicationListenerService
 import me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity
 import me.henneke.wearauthn.ui.EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER
@@ -77,12 +79,12 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        registerHidDeviceProfile()
+        observeHidDeviceProfile()
     }
 
-    private fun registerHidDeviceProfile() {
+    private fun observeHidDeviceProfile() {
         if (context.hasBluetoothPermissions && context.bluetoothAdapter != null && hidDeviceProfile == null) {
-            hidDeviceProfile = HidDataSender.register(context, hidProfileListener, null)
+            hidDeviceProfile = HidDataSender.addListener(hidProfileListener)
         }
     }
 
@@ -129,6 +131,11 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
             intent.`package` = BuildConfig.APPLICATION_ID
         }
         supportPreference = findPreference(getString(R.string.preference_support_key))
+        (findPreference(getString(R.string.preference_session_timeout_key)) as ListPreference).apply {
+            entries = SessionTimeout.entries.map { getString(it.label) }.toTypedArray()
+            entryValues = SessionTimeout.entries.map { it.preferenceValue }.toTypedArray()
+            value = SessionTimeout.fromPreference(value).preferenceValue
+        }
     }
 
     override fun onResume() {
@@ -168,7 +175,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
     override fun onDetach() {
         super.onDetach()
         if (hidDeviceProfile != null) {
-            HidDataSender.unregister(hidProfileListener, null)
+            HidDataSender.removeListener(hidProfileListener)
             hidDeviceProfile = null
         }
     }
@@ -198,7 +205,8 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
                 if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     updateBluetoothStateAndDeviceEntries()
                     updateDiscoverableState()
-                    registerHidDeviceProfile()
+                    observeHidDeviceProfile()
+                    AuthenticatorService.start(context)
                 } else {
                     activity.showToast(context.getString(R.string.status_bluetooth_permissions_required))
                 }

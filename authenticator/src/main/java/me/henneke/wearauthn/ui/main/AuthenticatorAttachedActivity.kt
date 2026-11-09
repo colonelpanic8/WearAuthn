@@ -95,7 +95,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         binding.textClock.paint.isAntiAlias = false
 
         AuthenticatorService.start(this)
-        hidDeviceProfile = HidDataSender.register(this, hidProfileListener, null)
+        hidDeviceProfile = HidDataSender.addListener(hidProfileListener)
     }
 
     @SuppressLint("MissingPermission")
@@ -174,7 +174,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        HidDataSender.unregister(hidProfileListener, null)
+        HidDataSender.removeListener(hidProfileListener)
     }
 
     companion object : Logging {

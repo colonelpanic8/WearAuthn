@@ -7,22 +7,19 @@ import android.app.PendingIntent
 import android.app.Service
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothProfile
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.IBinder
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import me.henneke.wearauthn.Logging
 import me.henneke.wearauthn.R
@@ -34,16 +31,16 @@ import me.henneke.wearauthn.fido.rfcomm.RfcommAuthenticator
 import me.henneke.wearauthn.i
 import me.henneke.wearauthn.ui.PromptActivity
 import me.henneke.wearauthn.ui.bluetoothAdapter
-import me.henneke.wearauthn.ui.hasBluetoothPermissions
 import me.henneke.wearauthn.ui.defaultSharedPreferences
+import me.henneke.wearauthn.ui.hasBluetoothPermissions
 import me.henneke.wearauthn.ui.main.AuthenticatorActivity
 import me.henneke.wearauthn.ui.main.HidAuthenticatorContext
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Runs the authenticator in the background: it keeps the Bluetooth HID Device app registered,
- * reconnects to the last HID host, serves CTAP requests from that host and from phones over
- * RFCOMM, and shows confirmation prompts on top of whatever is on screen.
+ * One authenticator session, started by opening the app. While it runs, the Bluetooth HID Device
+ * app is registered, phones can connect over RFCOMM, and confirmation prompts show on top of
+ * whatever is on screen. It stops after the configured idle time or from its notification.
  *
  * Running as a foreground service is also what keeps the HID registration alive: the Bluetooth
  * stack unregisters HID Device apps whose UID drops below foreground-service importance.
@@ -56,8 +53,9 @@ class AuthenticatorService : Service(), CoroutineScope {
     private lateinit var authenticatorContext: HidAuthenticatorContext
     private lateinit var transactionManager: TransactionManager
     private var rfcommAuthenticator: RfcommAuthenticator? = null
-    private var reconnectJob: Job? = null
-    private var hidConnected = false
+
+    @Volatile
+    private var lastActivityAt = SystemClock.elapsedRealtime()
 
     private val ioListener = object : HidIntrDataListener {
         override fun onIntrData(
@@ -66,6 +64,7 @@ class AuthenticatorService : Service(), CoroutineScope {
             data: ByteArray,
             host: InputHostWrapper
         ) {
+            recordActivity()
             transactionManager.handleReport(data) { reports ->
                 for (report in reports)
                     host.sendReport(device, reportId.toInt(), report)
@@ -75,32 +74,25 @@ class AuthenticatorService : Service(), CoroutineScope {
 
     private val profileListener = object : HidDataSender.ProfileListener {
         override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
-            hidConnected = state == BluetoothProfile.STATE_CONNECTED
-            if (hidConnected) {
+            if (state == BluetoothProfile.STATE_CONNECTED) {
                 i { "HID connected to ${device.address}" }
                 lastHostAddress = device.address
             }
         }
 
-        override fun onAppStatusChanged(registered: Boolean) {
-            if (registered)
-                reconnectToLastHost()
-        }
+        override fun onAppStatusChanged(registered: Boolean) {}
 
         override fun onServiceStateChanged(proxy: BluetoothProfile?) {}
-    }
-
-    private val aclReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-            if (device?.address == lastHostAddress)
-                reconnectToLastHost()
-        }
     }
 
     private var lastHostAddress: String?
         get() = defaultSharedPreferences.getString(PREF_LAST_HOST, null)
         set(value) = defaultSharedPreferences.edit().putString(PREF_LAST_HOST, value).apply()
+
+    private val sessionTimeout: SessionTimeout
+        get() = SessionTimeout.fromPreference(
+            defaultSharedPreferences.getString(getString(R.string.preference_session_timeout_key), null)
+        )
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -113,7 +105,8 @@ class AuthenticatorService : Service(), CoroutineScope {
             releaseActivity = { PromptActivity.release() },
         )
         transactionManager = TransactionManager(authenticatorContext)
-        HidDataSender.register(this, profileListener, ioListener)
+        HidDataSender.addListener(profileListener)
+        HidDataSender.start(this, ioListener)
         bluetoothAdapter?.let { adapter ->
             // Phones ask for one credential at a time and only talk to the watch.
             val rfcommContext = HidAuthenticatorContext(
@@ -122,39 +115,57 @@ class AuthenticatorService : Service(), CoroutineScope {
                 releaseActivity = { PromptActivity.release() },
                 confirmsAbsentCredentials = false,
             )
-            rfcommAuthenticator = RfcommAuthenticator(adapter, rfcommContext, this).also {
-                it.start()
-            }
+            rfcommAuthenticator =
+                RfcommAuthenticator(adapter, rfcommContext, this, ::recordActivity).also {
+                    it.start()
+                }
         }
-        ContextCompat.registerReceiver(
-            this,
-            aclReceiver,
-            IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED),
-            ContextCompat.RECEIVER_EXPORTED
-        )
-        reconnectJob = launch {
-            while (isActive) {
-                delay(RECONNECT_INTERVAL_MS)
-                if (!hidConnected)
-                    reconnectToLastHost()
-            }
-        }
+        watchIdleTime()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_STOP) {
+            i { "Turned off from the notification" }
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        recordActivity()
+        if (!HidDataSender.hasTarget)
+            connectToLastHost()
+        return START_NOT_STICKY
+    }
 
     override fun onDestroy() {
-        unregisterReceiver(aclReceiver)
+        HidDataSender.removeListener(profileListener)
         rfcommAuthenticator?.stop()
-        HidDataSender.unregister(profileListener, ioListener)
+        HidDataSender.stop()
         cancel()
         super.onDestroy()
     }
 
+    private fun recordActivity() {
+        lastActivityAt = SystemClock.elapsedRealtime()
+    }
+
+    // delay() runs on uptime, which stops while the watch sleeps, so compare against
+    // elapsedRealtime() and wake at least once a minute of uptime to notice.
+    private fun watchIdleTime() = launch {
+        while (true) {
+            val timeoutMs = sessionTimeout.durationMs
+            val remainingMs =
+                if (timeoutMs == null) MAX_IDLE_CHECK_INTERVAL_MS
+                else lastActivityAt + timeoutMs - SystemClock.elapsedRealtime()
+            if (remainingMs <= 0) {
+                i { "Idle for ${timeoutMs}ms; ending session" }
+                stopSelf()
+                return@launch
+            }
+            delay(remainingMs.coerceAtMost(MAX_IDLE_CHECK_INTERVAL_MS))
+        }
+    }
+
     @SuppressLint("MissingPermission")
-    private fun reconnectToLastHost() {
-        if (hidConnected)
-            return
+    private fun connectToLastHost() {
         val address = lastHostAddress ?: return
         val device = bluetoothAdapter?.bondedDevices?.firstOrNull { it.address == address } ?: return
         HidDataSender.requestConnect(device)
@@ -180,6 +191,16 @@ class AuthenticatorService : Service(), CoroutineScope {
                     PendingIntent.FLAG_IMMUTABLE
                 )
             )
+            .addAction(
+                0,
+                getString(R.string.notification_action_turn_off),
+                PendingIntent.getService(
+                    this,
+                    0,
+                    Intent(this, AuthenticatorService::class.java).setAction(ACTION_STOP),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            )
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .build()
@@ -197,7 +218,8 @@ class AuthenticatorService : Service(), CoroutineScope {
         private const val CHANNEL_ID = "hid"
         private const val NOTIFICATION_ID = 1
         private const val PREF_LAST_HOST = "last_hid_host"
-        private const val RECONNECT_INTERVAL_MS = 60_000L
+        private const val ACTION_STOP = "me.henneke.wearauthn.action.STOP_SESSION"
+        private const val MAX_IDLE_CHECK_INTERVAL_MS = 60_000L
 
         fun start(context: Context) {
             if (!context.hasBluetoothPermissions)
