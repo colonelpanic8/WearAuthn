@@ -433,6 +433,9 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             CTAP_ERR(Other)
         }
         v { "Storing resident credential information: {'rpId': '${rpId}', 'uid+$encodedUserId': '$serializedCredential', 'kh+$encodedKeyHandle': '$encodedUserId'}" }
+        context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
+            putBoolean(rpIdHash.base64(), true)
+        }
         getResidentKeyPrefsForRpId(rpIdHash).edit {
             putString("rpId", rpId)
             putString("uid+$encodedUserId", serializedCredential)
@@ -646,12 +649,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             context: Context,
             rpIdHash: ByteArray
         ): SharedPreferences {
-            val rpIdHashString = rpIdHash.base64()
-            v { "Writing RP ID hash entry for $rpIdHashString" }
-            context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
-                putBoolean(rpIdHashString, true)
-            }
-            return context.sharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHashString)
+            return context.sharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHash.base64())
         }
 
         fun getAllResidentCredentials(context: Context): Map<String, List<WebAuthnCredential>> {
