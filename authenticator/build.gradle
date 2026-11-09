@@ -74,6 +74,11 @@ android {
     applicationVariants.configureEach { variant ->
         variant.resValue "string", "application_id", variant.applicationId
     }
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
