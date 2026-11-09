@@ -24,6 +24,7 @@ import me.henneke.wearauthn.fido.ctap2.CtapError.OperationDenied
 import me.henneke.wearauthn.fido.ctap2.CtapError.Other
 import me.henneke.wearauthn.fido.u2f.resolveAppIdHash
 import me.henneke.wearauthn.ui.*
+import java.io.File
 import kotlin.coroutines.resume
 
 private const val COUNTERS_PREFERENCE_FILE = "counters"
@@ -601,11 +602,16 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                 context.sharedPreferences(COUNTERS_PREFERENCE_FILE).edit(commit = true) {
                     clear()
                 }
-                for (rpIdHashString in context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).all.keys) {
-                    context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE + rpIdHashString)
-                        .edit(commit = true) {
-                            clear()
-                        }
+                val indexedRecords =
+                    context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).all.keys
+                        .map { RESIDENT_KEY_PREFERENCE_FILE_PREFIX + it }
+                // Earlier versions cleared the index without deleting the records it listed.
+                val recordsOnDisk = File(context.applicationInfo.dataDir, "shared_prefs")
+                    .list().orEmpty()
+                    .map { it.removeSuffix(".xml") }
+                    .filter { it.startsWith(RESIDENT_KEY_PREFERENCE_FILE_PREFIX) }
+                for (record in indexedRecords + recordsOnDisk) {
+                    context.deleteSharedPreferences(record)
                 }
                 context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit(commit = true) {
                     clear()
