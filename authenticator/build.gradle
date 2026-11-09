@@ -4,7 +4,6 @@ apply plugin: 'kotlin-android'
 
 android {
     kotlinOptions {
-        freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xopt-in=org.mylibrary.OptInAnnotation"]
         jvmTarget = "1.8"
     }
     signingConfigs {
@@ -30,7 +29,7 @@ android {
             keyPassword project.hasProperty("keyPassword") ? project.keyPassword : ""
         }
     }
-    compileSdk 34
+    compileSdk 35
     defaultConfig {
         applicationId "me.henneke.wearauthn.authenticator"
         minSdk 28

@@ -19,10 +19,10 @@
           android_sdk.accept_license = true;
         };
       };
-      buildToolsVersion = "34.0.0";
+      buildToolsVersion = "35.0.0";
       androidComposition = pkgs.androidenv.composeAndroidPackages {
         buildToolsVersions = [buildToolsVersion];
-        platformVersions = ["34"];
+        platformVersions = ["34" "35"];
         includeEmulator = false;
         includeSources = false;
         includeSystemImages = false;
