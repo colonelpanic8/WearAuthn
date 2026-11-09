@@ -15,8 +15,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.nfc.NfcManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
@@ -109,12 +109,15 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
         bluetoothPermissionsPreference.setOnPreferenceClickListener {
             if (!context.hasBluetoothPermissions) {
                 requestPermissions(
-                    arrayOf(
+                    listOfNotNull(
                         Manifest.permission.BLUETOOTH_CONNECT,
                         Manifest.permission.BLUETOOTH_SCAN,
                         Manifest.permission.BLUETOOTH_ADVERTISE,
                         Manifest.permission.BLUETOOTH,
-                    ),
+                        Manifest.permission.POST_NOTIFICATIONS.takeIf {
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        },
+                    ).toTypedArray(),
                     REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS
                 )
             }
@@ -206,7 +209,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
 
         when (requestCode) {
             REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS -> {
-                if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                if (context.hasBluetoothPermissions) {
                     updateBluetoothStateAndDeviceEntries()
                     updateDiscoverableState()
                     observeHidDeviceProfile()
