@@ -81,11 +81,15 @@
     <string name="preference_log_level_dialog_title">Log-Level wählen</string>
     <string name="preference_log_level_dialog_message">Auf \"Debug\" oder \"Verbose\" können Logs persönliche Informationen enthalten.</string>
     <string name="status_bluetooth_permissions_required">Bluetooth-Berechtigung nicht erteilt</string>
+    <string name="notification_channel_hid">Bluetooth-Sicherheitsschlüssel</string>
+    <string name="notification_hid_title">Bereit als Sicherheitsschlüssel</string>
     <string name="notification_action_turn_off">Ausschalten</string>
     <string name="preference_session_timeout_title">Bereit bleiben</string>
     <string name="session_timeout_five_minutes">5 Minuten</string>
     <string name="session_timeout_fifteen_minutes">15 Minuten</string>
     <string name="session_timeout_one_hour">1 Stunde</string>
     <string name="session_timeout_until_turned_off">Bis zum Ausschalten</string>
+    <string name="notification_channel_prompt">Sicherheitsschlüssel-Anfragen</string>
+    <string name="notification_prompt_title">Sicherheitsschlüssel-Anfrage – zum Prüfen tippen</string>
 </resources>
 
