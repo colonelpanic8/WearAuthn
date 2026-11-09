@@ -525,17 +525,14 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
                 updateBluetoothStateAndDeviceEntries()
                 return
             }
+            // Carries no device, unlike the actions below.
+            if (intent.action == BluetoothAdapter.ACTION_SCAN_MODE_CHANGED) {
+                updateDiscoverableState()
+                return
+            }
             val device =
                 intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
             when (intent.action) {
-                BluetoothAdapter.ACTION_SCAN_MODE_CHANGED -> {
-                    intent.getIntExtra(
-                        BluetoothAdapter.EXTRA_SCAN_MODE,
-                        BluetoothAdapter.SCAN_MODE_NONE
-                    )
-                    updateDiscoverableState()
-                }
-
                 BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
                     if (context.hasBluetoothPermissions) {
                         removeEntryForDevice(device)
