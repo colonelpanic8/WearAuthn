@@ -188,12 +188,9 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
      */
     open val confirmsAbsentCredentials: Boolean = true
 
-    /**
-     * Runs [block] on the main thread with a context that can show dialogs, or returns null
-     * without running it if there is none.
-     */
-    protected open suspend fun <T> withDialogContext(block: suspend (Context) -> T): T? =
-        withContext(Dispatchers.Main) { block(context) }
+    /** Asks the user which of [credentials] to use, or returns null if there is no one to ask. */
+    protected open suspend fun chooseAccount(credentials: List<WebAuthnCredential>): WebAuthnCredential? =
+        null
 
     // We use cached credentials only over NFC, where low latency responses are very important
     private val useCachedCredential = !isHidTransport
@@ -376,19 +373,8 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             return credentials.first()
         // If there is more than one credential to choose from, all of them must be resident.
         require(credentials.all { it is WebAuthnCredential && it.isResident })
-        val credentialsArray = credentials.map { it as WebAuthnCredential }.toTypedArray()
         status = AuthenticatorStatus.WAITING_FOR_UP
-        val credential = withDialogContext { dialogContext ->
-            suspendCancellableCoroutine<WebAuthnCredential?> { continuation ->
-                val dialog = CredentialChooserDialog(credentialsArray, dialogContext) {
-                    continuation.resume(it)
-                }
-                dialog.show()
-                continuation.invokeOnCancellation {
-                    dialog.dismiss()
-                }
-            }
-        }
+        val credential = chooseAccount(credentials.map { it as WebAuthnCredential })
         status = AuthenticatorStatus.PROCESSING
         return credential
     }

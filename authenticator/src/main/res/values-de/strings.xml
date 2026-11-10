@@ -136,5 +136,8 @@
         <item quantity="one">%d auf dieser Uhr</item>
         <item quantity="other">%d auf dieser Uhr</item>
     </plurals>
+    <string name="prompt_as_account">als %1$s</string>
+    <string name="prompt_choose_account_for">Wähle einen Account für</string>
+    <string name="prompt_choose_account">Wähle einen Account</string>
 </resources>
 

@@ -1,28 +1,25 @@
 package me.henneke.wearauthn.ui.main
 
 import android.content.Context
-import android.content.DialogInterface
-import kotlinx.coroutines.suspendCancellableCoroutine
-import me.henneke.wearauthn.R
 import me.henneke.wearauthn.breakAt
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus
 import me.henneke.wearauthn.fido.context.AuthenticatorStatus
-import me.henneke.wearauthn.fido.context.PromptContent
 import me.henneke.wearauthn.fido.context.RequestInfo
+import me.henneke.wearauthn.fido.context.WebAuthnCredential
 import me.henneke.wearauthn.fido.hid.HID_USER_PRESENCE_TIMEOUT_MS
 import me.henneke.wearauthn.ui.PromptActivity
-import me.henneke.wearauthn.ui.TimedAcceptDenyDialog
-import kotlin.coroutines.resume
+import me.henneke.wearauthn.ui.prompt.AccountChoice
+import me.henneke.wearauthn.ui.prompt.Approval
+import me.henneke.wearauthn.ui.prompt.Prompt
+
+private const val CHOOSE_ACCOUNT_TIMEOUT_MS = 30_000L
 
 @ExperimentalUnsignedTypes
 class HidAuthenticatorContext(
     private val context: Context,
     override val confirmsAbsentCredentials: Boolean = true,
 ) : AuthenticatorContext(context, isHidTransport = true) {
-
-    override suspend fun <T> withDialogContext(block: suspend (Context) -> T): T? =
-        PromptActivity.use(context, block)
 
     override fun notifyUser(info: RequestInfo) {
         // No-op for HID transport since we already asked for confirmation during
@@ -36,74 +33,40 @@ class HidAuthenticatorContext(
 
     /**
      * Returns true if the user confirms the request, false if the user denies it explicitly and
-     * null if the confirmation dialog times out or cannot be shown.
+     * null if the confirmation prompt times out or cannot be shown.
      */
-    override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean? {
-        return try {
-            status = AuthenticatorStatus.WAITING_FOR_UP
-            PromptActivity.use(context) { activity ->
-                val dialog =
-                    TimedAcceptDenyDialog(activity).apply {
-                        create()
-                        setIcon(R.drawable.ic_launcher_outline)
-                        setMessage(info.prompt.asText())
-                        setTimeout(HID_USER_PRESENCE_TIMEOUT_MS)
-                        setVibrateOnShow(true)
-                        setWakeOnShow(true)
-                    }
-                suspendCancellableCoroutine { continuation ->
-                    dialog.apply {
-                        setPositiveButton { _, _ -> continuation.resume(true) }
-                        setNegativeButton { _, _ -> continuation.resume(false) }
-                        setTimeoutListener { continuation.resume(null) }
-                    }.show()
-                    continuation.invokeOnCancellation {
-                        dialog.dismiss()
-                    }
-                }
+    override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean? =
+        waitingForUser {
+            when (ask(Prompt.Approve(info.prompt, HID_USER_PRESENCE_TIMEOUT_MS))) {
+                Approval.Approved -> true
+                Approval.Denied -> false
+                Approval.TimedOut, null -> null
             }
-        } finally {
-            status = AuthenticatorStatus.PROCESSING
         }
+
+    override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? =
+        waitingForUser {
+            ask(Prompt.Transaction(rpId, prompt, HID_USER_PRESENCE_TIMEOUT_MS))
+                ?.let { lineBreaks -> prompt.breakAt(lineBreaks) }
+        }
+
+    override suspend fun chooseAccount(credentials: List<WebAuthnCredential>): WebAuthnCredential? {
+        val accounts = credentials.mapIndexed { index, credential ->
+            credential.getTwoLineInfo(index + 1).let { (title, subtitle) -> AccountChoice(title, subtitle) }
+        }
+        val site = credentials.firstNotNullOfOrNull { it.rpName }
+        val index = ask(Prompt.ChooseAccount(site, accounts, CHOOSE_ACCOUNT_TIMEOUT_MS))
+        return index?.let { credentials.getOrNull(it) }
     }
 
-    override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? {
-        return try {
+    private suspend fun <R> ask(prompt: Prompt<R>): R? =
+        PromptActivity.use(context) { it.ask(prompt) }
+
+    private suspend fun <T> waitingForUser(block: suspend () -> T): T =
+        try {
             status = AuthenticatorStatus.WAITING_FOR_UP
-            PromptActivity.use(context) { activity ->
-                val dialog =
-                    TimedAcceptDenyDialog(activity).apply {
-                        create()
-                        setIcon(R.drawable.ic_launcher_outline)
-                        setTitle(rpId)
-                        setMessage(prompt)
-                        setTimeout(HID_USER_PRESENCE_TIMEOUT_MS)
-                        setVibrateOnShow(true)
-                        setWakeOnShow(true)
-                    }
-                suspendCancellableCoroutine { continuation ->
-                    dialog.apply {
-                        setPositiveButton { _, _ ->
-                            val lineBreaks = messageLineBreaks
-                            if (lineBreaks == null)
-                                continuation.resume(null)
-                            else
-                                continuation.resume(prompt.breakAt(lineBreaks))
-                        }
-                        setNegativeButton { _, _ ->
-                            continuation.resume(null)
-                        }
-                    }.show()
-                    continuation.invokeOnCancellation {
-                        dialog.dismiss()
-                    }
-                }
-            }
+            block()
         } finally {
             status = AuthenticatorStatus.PROCESSING
         }
-    }
 }
-
-private fun PromptContent.asText(): String =
-    (listOfNotNull(action, site, siteName, account) + notes).joinToString("\n")

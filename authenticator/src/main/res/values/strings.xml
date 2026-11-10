@@ -151,4 +151,7 @@
         <item quantity="one">%d on this watch</item>
         <item quantity="other">%d on this watch</item>
     </plurals>
+    <string name="prompt_as_account">as %1$s</string>
+    <string name="prompt_choose_account_for">Choose an account for</string>
+    <string name="prompt_choose_account">Choose an account</string>
 </resources>
