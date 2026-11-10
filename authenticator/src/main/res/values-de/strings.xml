@@ -21,7 +21,7 @@
     <string name="name_unlocked_channel">Freigeschaltete Zusatzfunktionen</string>
     <string name="description_unlocked_channel">Informiert dich über Zusatzfunktionen, die auf deiner Uhr durch einen In-App-Kauf auf deinem Android-Gerät freigeschaltet wurden.</string>
     <string name="message_continue_on_phone">Auf dem Smartphone fortfahren</string>
-    <string name="message_deleted_all_data">WearAuthn zurückgesetzt</string>
+    <string name="message_deleted_all_data">Zurückgesetzt</string>
     <string name="preference_screen_title_shortcut_picker">Füge deinem Zifferblatt eine Geräteverknüpfung hinzu</string>
     <string name="preference_single_factor_mode_summary_active">Aktiviert</string>
     <string name="bluetooth_permissions_explanation">Bluetooth-Berechtigung erteilen</string>
@@ -139,5 +139,10 @@
     <string name="prompt_as_account">als %1$s</string>
     <string name="prompt_choose_account_for">Wähle einen Account für</string>
     <string name="prompt_choose_account">Wähle einen Account</string>
+    <string name="reset_ask_title">Alle Anmeldedaten löschen?</string>
+    <string name="reset_ask_text">Du verlierst den Zugang zu Accounts, bei denen du dich nicht anders anmelden kannst.</string>
+    <string name="reset_confirm_title">Wirklich alles löschen?</string>
+    <string name="reset_confirm_text">Alle Anmeldedaten auf dieser Uhr werden gelöscht. Das lässt sich nicht rückgängig machen.</string>
+    <string name="reset_confirm_button">Alles löschen</string>
 </resources>
 

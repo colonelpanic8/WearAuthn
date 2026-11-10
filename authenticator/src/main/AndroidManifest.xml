@@ -82,12 +82,6 @@
         <activity
             android:name="me.henneke.wearauthn.ui.ManageSpaceActivity"
             android:taskAffinity=".ui.ManageSpaceActivity" />
-        <activity
-            android:name="android.support.wearable.preference.WearablePreferenceActivity"
-            android:taskAffinity=".ui.main.AuthenticatorActivity" />
-        <activity
-            android:name="androidx.wear.activity.ConfirmationActivity"
-            android:taskAffinity=".ui.main.AuthenticatorActivity" />
 
         <service
             android:name="me.henneke.wearauthn.service.AuthenticatorService"

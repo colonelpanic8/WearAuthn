@@ -308,7 +308,7 @@ class HomeViewModel(application: Application) :
     }
 }
 
-private val BluetoothDevice.kind: DeviceKind
+internal val BluetoothDevice.kind: DeviceKind
     @SuppressLint("MissingPermission")
     get() = when (bluetoothClass?.majorDeviceClass) {
         BluetoothClass.Device.Major.COMPUTER -> DeviceKind.Computer

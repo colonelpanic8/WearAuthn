@@ -40,7 +40,7 @@
     <string name="generic_icon">Icon</string>
     <string name="prompt_delete_all_data_first_step_message">Delete all credentials?\nYou will <b>lose access to your accounts</b> if you don\'t have a backup second factor.</string>
     <string name="prompt_delete_all_data_second_step_message">Scroll down for the confirmation button.\n\n\n\n\n\n\n\n\n\n\n<b>Really delete all credentials?</b></string>
-    <string name="message_deleted_all_data">WearAuthn has been reset</string>
+    <string name="message_deleted_all_data">WearAuthn reset</string>
     <string name="status_bluetooth_use_via_nfc_instead">Use via NFC instead</string>
     <string name="preference_screen_title_shortcut_picker">Add a device shortcut to your watch face</string>
     <string name="message_continue_on_phone">Continue on your phone</string>
@@ -154,4 +154,9 @@
     <string name="prompt_as_account">as %1$s</string>
     <string name="prompt_choose_account_for">Choose an account for</string>
     <string name="prompt_choose_account">Choose an account</string>
+    <string name="reset_ask_title">Delete all credentials?</string>
+    <string name="reset_ask_text">You lose access to accounts that have no other sign-in.</string>
+    <string name="reset_confirm_title">Really delete everything?</string>
+    <string name="reset_confirm_text">Every credential on this watch is deleted. This cannot be undone.</string>
+    <string name="reset_confirm_button">Delete everything</string>
 </resources>

@@ -3,85 +3,50 @@ package me.henneke.wearauthn.complication
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceFragment
-import android.preference.PreferenceScreen
 import android.support.wearable.complications.ComplicationProviderService
-import android.support.wearable.preference.WearablePreferenceActivity
-import me.henneke.wearauthn.R
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.wear.compose.material3.AppScaffold
 import me.henneke.wearauthn.bthid.canUseAuthenticator
-import me.henneke.wearauthn.bthid.defaultAdapter
-import me.henneke.wearauthn.ui.BluetoothDevicePreference
+import me.henneke.wearauthn.bthid.identifier
+import me.henneke.wearauthn.ui.ShortcutPickerScreen
+import me.henneke.wearauthn.ui.bluetoothAdapter
 import me.henneke.wearauthn.ui.hasBluetoothPermissions
+import me.henneke.wearauthn.ui.main.Host
+import me.henneke.wearauthn.ui.main.Link
+import me.henneke.wearauthn.ui.main.kind
+import me.henneke.wearauthn.ui.theme.WearAuthnTheme
 
+class ComplicationConfigActivity : ComponentActivity() {
 
-class ComplicationConfigActivity : WearablePreferenceActivity() {
-
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val extras = intent.extras
-        if (extras?.containsKey(ComplicationProviderService.EXTRA_CONFIG_COMPLICATION_ID) != true) {
+        val complicationId =
+            intent.extras?.getInt(ComplicationProviderService.EXTRA_CONFIG_COMPLICATION_ID, -1)
+                ?.takeIf { it != -1 }
+        if (complicationId == null) {
             finish()
             return
         }
-        startPreferenceFragment(ShortcutPicker().apply { arguments = extras }, false)
-    }
-}
-
-class ShortcutPicker : PreferenceFragment() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        preferenceScreen = preferenceManager.createPreferenceScreen(context)
-        preferenceScreen.setTitle(R.string.preference_screen_title_shortcut_picker)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        // Enable rotary wheel scrolling.
-        view?.requestFocus()
-    }
-
-    override fun onPreferenceTreeClick(
-        preferenceScreen: PreferenceScreen?,
-        preference: Preference?
-    ): Boolean {
-        return if (preference != null) {
-            ShortcutComplicationProviderService.setDeviceShortcut(
-                context,
-                arguments.getInt(ComplicationProviderService.EXTRA_CONFIG_COMPLICATION_ID),
-                preference.key
-            )
-            activity.apply {
-                setResult(Activity.RESULT_OK)
-                finish()
+        val hosts = (if (hasBluetoothPermissions) bluetoothAdapter?.bondedDevices.orEmpty() else emptySet())
+            .filter { it.canUseAuthenticator }
+            .map { Host(it.address, it.identifier, it.kind, Link.Detached) }
+            .sortedBy { it.name.lowercase() }
+        setContent {
+            WearAuthnTheme {
+                AppScaffold {
+                    ShortcutPickerScreen(hosts) { host ->
+                        ShortcutComplicationProviderService.setDeviceShortcut(
+                            this@ComplicationConfigActivity,
+                            complicationId,
+                            host.address
+                        )
+                        setResult(Activity.RESULT_OK)
+                        finish()
+                    }
+                }
             }
-            true
-        } else {
-            super.onPreferenceTreeClick(preferenceScreen, preference)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        createPreferences()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        clearPreferences()
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun createPreferences() {
-        for (device in if (context.hasBluetoothPermissions) defaultAdapter.bondedDevices else emptySet()) {
-            if (!device.canUseAuthenticator)
-                continue
-            preferenceScreen.addPreference(BluetoothDevicePreference(context, device))
-        }
-    }
-
-    private fun clearPreferences() {
-        preferenceScreen.removeAll()
     }
 }
