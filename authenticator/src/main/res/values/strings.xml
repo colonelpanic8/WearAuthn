@@ -23,7 +23,7 @@
     <string name="status_nfc_tap_and_enable">Tap and enable</string>
     <string name="preference_discoverable_key" translatable="false">preference_discoverable</string>
     <string name="preference_single_factor_mode_key" translatable="false">preference_single_factor_mode</string>
-    <string name="prompt_single_factor_mode_message"><![CDATA[Registrations made in passwordless mode allow you to log in to certain sites without username or password.<br/><br/>Passwordless logins will no longer work after you turn off your screen lock and cannot be enabled again without a full reset of WearAuthn.<br/><br/>Continue?]]></string>
+    <string name="prompt_single_factor_mode_message">Registrations made in passwordless mode let you log in to certain sites without a user name or password.\n\nPasswordless logins stop working once you turn off your screen lock, and cannot be turned on again without a full reset of WearAuthn.\n\nContinue?</string>
     <string name="prompt_single_factor_mode_title">Enable passwordless mode?</string>
     <string name="preference_single_factor_mode_summary_available">Log in to certain sites without a password</string>
     <string name="preference_single_factor_mode_summary_active">Active</string>
@@ -117,4 +117,38 @@
     <string name="prompt_note_authenticate_resident_key">You will pick an account next.</string>
     <string name="prompt_note_register_user_verification">Signing in with the watch may need your screen lock, and stops working if you turn the lock off.</string>
     <string name="prompt_note_register_resident_key">The site\'s address and your user name are stored on the watch.</string>
+    <string name="action_allow">Allow</string>
+    <string name="action_turn_on">Turn on</string>
+    <string name="generic_off">Off</string>
+    <string name="home_needs_permission_title">Allow Bluetooth</string>
+    <string name="home_needs_permission_text">The watch talks to computers and phones over Bluetooth.</string>
+    <string name="home_bluetooth_off_title">Bluetooth is off</string>
+    <string name="home_bluetooth_off_text">Computers reach the watch over Bluetooth.</string>
+    <string name="home_turning_on_title">Turning on…</string>
+    <string name="home_pairing_title">Visible for %1$s</string>
+    <string name="home_pairing_text">On the computer, add a Bluetooth device and pick %1$s.</string>
+    <string name="home_ready_title">Ready</string>
+    <string name="home_ready_text">Tap a computer to attach.</string>
+    <string name="home_no_computers_title">No computers yet</string>
+    <string name="home_no_computers_text">Pair one to use the watch as its security key.</string>
+    <string name="home_computers">Computers</string>
+    <string name="home_pair">Pair a computer</string>
+    <string name="home_pair_visible">Visible</string>
+    <string name="home_nfc_off">NFC is off</string>
+    <string name="home_nfc_off_text">Turn it on for phones</string>
+    <string name="home_passkeys_none">None yet</string>
+    <string name="passkeys_title">Passkeys</string>
+    <string name="passkeys_empty_title">No passkeys yet</string>
+    <string name="passkeys_empty_text">Sites that let you sign in without a password keep their passkey here.</string>
+    <string name="passkeys_needs_reset">Needs a full reset because the screen lock was turned off</string>
+    <string name="passkey_created">Created %1$s</string>
+    <string name="passkey_delete_title">Delete this passkey?</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_stay_ready">Stay ready</string>
+    <string name="settings_phone_always_ready">Phone always ready</string>
+    <string name="about_version">Version %1$s</string>
+    <plurals name="home_passkeys_count">
+        <item quantity="one">%d on this watch</item>
+        <item quantity="other">%d on this watch</item>
+    </plurals>
 </resources>

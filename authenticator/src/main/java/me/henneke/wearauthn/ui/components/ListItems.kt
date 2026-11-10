@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumnItemScope
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumnScope
@@ -66,15 +68,17 @@ fun TransformingLazyColumnItemScope.ScreenTitle(text: String, spec: Transformati
     }
 }
 
+/** A small label above a group of rows; lighter than a [ListHeader], which suits screen titles. */
 @Composable
 fun TransformingLazyColumnItemScope.SectionHeader(text: String, spec: TransformationSpec) {
-    ListHeader(
-        modifier = Modifier.transformedHeight(this, spec),
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        transformation = SurfaceTransformation(spec),
-    ) {
-        Text(text, style = MaterialTheme.typography.labelMedium)
-    }
+    Text(
+        text,
+        modifier = Modifier.fillMaxWidth().transformedHeight(this, spec)
+            .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = 2.dp),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -120,7 +124,7 @@ fun TransformingLazyColumnItemScope.ListText(
     Box(modifier.fillMaxWidth().transformedHeight(this, spec)) {
         Text(
             text,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

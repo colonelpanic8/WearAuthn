@@ -5,9 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.toRoborazziComposeOptions
@@ -46,7 +48,7 @@ class PreviewScreenshots(private val preview: ComposablePreview<AndroidPreviewIn
             // The watch face is round; paint the corners so the clip is visible.
             Box(Modifier.fillMaxSize().background(Color(0xFF3C3C3C))) {
                 Box(Modifier.fillMaxSize().clip(CircleShape).background(Color.Black)) {
-                    preview()
+                    CompositionLocalProvider(LocalInspectionMode provides true) { preview() }
                 }
             }
         }

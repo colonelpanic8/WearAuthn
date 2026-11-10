@@ -19,7 +19,7 @@ import me.henneke.wearauthn.*
 import me.henneke.wearauthn.bthid.identifier
 import me.henneke.wearauthn.ui.defaultSharedPreferences
 import me.henneke.wearauthn.ui.hasBluetoothPermissions
-import me.henneke.wearauthn.ui.main.AuthenticatorAttachedActivity
+import me.henneke.wearauthn.ui.main.AuthenticatorActivity
 
 private fun abbreviate(name: String): String {
     if (name.length <= 7) {
@@ -52,8 +52,8 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
             w { "Invalid device" }
             packageManager.getLaunchIntentForPackage(BuildConfig.APPLICATION_ID)
         } else {
-            Intent(this, AuthenticatorAttachedActivity::class.java)
-                .putExtra(AuthenticatorAttachedActivity.EXTRA_DEVICE, device)
+            Intent(this, AuthenticatorActivity::class.java)
+                .putExtra(AuthenticatorActivity.EXTRA_DEVICE, device)
                 .putExtra(EXTRA_COMPLICATION_ID, complicationId)
                 .setFlags(FLAG_ACTIVITY_CLEAR_TASK or FLAG_ACTIVITY_NEW_TASK)
         }

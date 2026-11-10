@@ -60,7 +60,7 @@
     <string name="message_register">Registriert%1$s%2$s</string>
     <string name="message_authenticate">Angemeldet%1$s%2$s</string>
     <string name="about_how_to_use"><b>Verwendung über Bluetooth</b>\nKopple ein Bluetooth&#8203;-&#8203;fähiges Gerät mit Windows 10 (Chrome, Firefox oder Edge), macOS (Chrome) oder Linux (Chrome) mit deiner Uhr und verbinde dich aus WearAuthns Hauptmenü damit. Danach kannst du deine Uhr wie einen eingestecken USB-Sicherheitsschlüssel verwenden.\n\n<b>Verwendung über NFC</b>\nHalte dein NFC&#8203;-&#8203;fähiges Android-Gerät oder iPhone (iOS 13.3+) an deine Uhr, wenn du dazu aufgefordert wirst, deinen Sicherheitsschlüssel zu verwenden. Das funktioniert auch vom Zifferblatt aus, solange es nicht im Ruhemodus ist.</string>
-    <string name="prompt_single_factor_mode_message"><![CDATA[Registrierungen im passwortlosen Modus erlauben dir auf manchen Seiten die Anmeldung ohne Nutzernamen oder Passwort.<br/><br/>Passwortlose Anmeldungen funktionieren nicht mehr nachdem du deine Displaysperre deaktivierst und können dann nicht mehr aktiviert werden, ohne WearAuthn vollständig zurückzusetzen.<br/><br/>Fortfahren?]]></string>
+    <string name="prompt_single_factor_mode_message">Registrierungen im passwortlosen Modus erlauben dir auf manchen Seiten die Anmeldung ohne Nutzernamen oder Passwort.\n\nPasswortlose Anmeldungen funktionieren nicht mehr, nachdem du deine Displaysperre deaktivierst, und können dann nicht mehr aktiviert werden, ohne WearAuthn vollständig zurückzusetzen.\n\nFortfahren?</string>
     <string name="prompt_authenticate_no_credentials">Fehlende Registrierung offenbaren?</string>
     <string name="message_authenticate_no_credentials">Fehlende Registrierung offenbart</string>
     <string name="message_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbart.</string>
@@ -102,5 +102,39 @@
     <string name="prompt_note_authenticate_resident_key">Wähle im nächsten Schritt einen Account aus.</string>
     <string name="prompt_note_register_user_verification">Anmeldungen über die Uhr erfordern ggf. deine Displaysperre und funktionieren nicht mehr, nachdem du sie deaktivierst.</string>
     <string name="prompt_note_register_resident_key">Die Adresse der Seite und dein Benutzername werden auf der Uhr gespeichert.</string>
+    <string name="action_allow">Erlauben</string>
+    <string name="action_turn_on">Einschalten</string>
+    <string name="generic_off">Aus</string>
+    <string name="home_needs_permission_title">Bluetooth erlauben</string>
+    <string name="home_needs_permission_text">Die Uhr spricht über Bluetooth mit Computern und Smartphones.</string>
+    <string name="home_bluetooth_off_title">Bluetooth ist aus</string>
+    <string name="home_bluetooth_off_text">Computer erreichen die Uhr über Bluetooth.</string>
+    <string name="home_turning_on_title">Wird eingeschaltet…</string>
+    <string name="home_pairing_title">Sichtbar für %1$s</string>
+    <string name="home_pairing_text">Füge am Computer ein Bluetooth-Gerät hinzu und wähle %1$s.</string>
+    <string name="home_ready_title">Bereit</string>
+    <string name="home_ready_text">Tippe auf einen Computer, um ihn zu verbinden.</string>
+    <string name="home_no_computers_title">Noch keine Computer</string>
+    <string name="home_no_computers_text">Kopple einen, um die Uhr als Sicherheitsschlüssel zu nutzen.</string>
+    <string name="home_computers">Computer</string>
+    <string name="home_pair">Computer koppeln</string>
+    <string name="home_pair_visible">Sichtbar</string>
+    <string name="home_nfc_off">NFC ist aus</string>
+    <string name="home_nfc_off_text">Für Smartphones einschalten</string>
+    <string name="home_passkeys_none">Noch keine</string>
+    <string name="passkeys_title">Passkeys</string>
+    <string name="passkeys_empty_title">Noch keine Passkeys</string>
+    <string name="passkeys_empty_text">Seiten, bei denen du dich ohne Passwort anmeldest, legen ihren Passkey hier ab.</string>
+    <string name="passkeys_needs_reset">Zurücksetzen erforderlich, da die Displaysperre deaktiviert wurde</string>
+    <string name="passkey_created">Erstellt am %1$s</string>
+    <string name="passkey_delete_title">Diesen Passkey löschen?</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_stay_ready">Bereit bleiben</string>
+    <string name="settings_phone_always_ready">Immer für Telefon bereit</string>
+    <string name="about_version">Version %1$s</string>
+    <plurals name="home_passkeys_count">
+        <item quantity="one">%d auf dieser Uhr</item>
+        <item quantity="other">%d auf dieser Uhr</item>
+    </plurals>
 </resources>
 

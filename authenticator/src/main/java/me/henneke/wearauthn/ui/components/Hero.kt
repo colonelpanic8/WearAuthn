@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -45,15 +46,15 @@ fun Hero(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Box(Modifier.padding(bottom = 6.dp).size(60.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(60.dp), contentAlignment = Alignment.Center) {
             Box(
-                Modifier.size(48.dp).clip(RoundedCornerShape(16.dp)).background(container),
+                Modifier.size(44.dp).clip(RoundedCornerShape(15.dp)).background(container),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(26.dp))
+                Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(24.dp))
             }
             if (busy) {
-                CircularProgressIndicator(Modifier.size(60.dp), strokeWidth = 3.dp)
+                BusyIndicator(Modifier.size(60.dp))
             }
         }
         Text(
@@ -69,5 +70,15 @@ fun Hero(
                 textAlign = TextAlign.Center,
             )
         }
+    }
+}
+
+/** An indeterminate spinner, drawn still in previews, which never settle on an endless animation. */
+@Composable
+fun BusyIndicator(modifier: Modifier = Modifier) {
+    if (LocalInspectionMode.current) {
+        CircularProgressIndicator(progress = { 0.3f }, modifier = modifier, strokeWidth = 3.dp)
+    } else {
+        CircularProgressIndicator(modifier, strokeWidth = 3.dp)
     }
 }

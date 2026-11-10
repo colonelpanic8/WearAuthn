@@ -18,7 +18,6 @@ import android.os.Build.VERSION_CODES
 import android.preference.PreferenceManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.wear.widget.ConfirmationOverlay
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
 import com.google.android.wearable.intent.RemoteIntent
@@ -26,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.asDeferred
 import kotlinx.coroutines.withContext
 import me.henneke.wearauthn.BuildConfig
-import me.henneke.wearauthn.R
 
 fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, message, duration).show()
@@ -63,7 +61,7 @@ val Context.hasBluetoothPermissions: Boolean
                 .all { it == PackageManager.PERMISSION_GRANTED }
         }
 
-fun openPlayStoreListingOnPhone(activity: Activity) {
+private fun openPlayStoreListingOnPhone(activity: Activity) {
     RemoteIntent.startRemoteActivity(
         activity,
         Intent(Intent.ACTION_VIEW)
@@ -72,11 +70,9 @@ fun openPlayStoreListingOnPhone(activity: Activity) {
             .setData(Uri.parse("https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")),
         null
     )
-    ConfirmationOverlay().setType(ConfirmationOverlay.OPEN_ON_PHONE_ANIMATION)
-        .setMessage(activity.getString(R.string.message_continue_on_phone))
-        .showOn(activity)
 }
 
+/** Opens the phone app, or its store listing if it is not installed. The caller says so on screen. */
 suspend fun openPhoneAppOrListing(activity: Activity) {
     val info = Wearable.getCapabilityClient(activity)
         .getCapability("phone-app", CapabilityClient.FILTER_ALL).asDeferred().await()
@@ -88,11 +84,6 @@ suspend fun openPhoneAppOrListing(activity: Activity) {
         val nodeId = info.nodes.first().id
         Wearable.getMessageClient(activity)
             .sendMessage(nodeId, "/launch", Build.MODEL.toByteArray()).asDeferred().await()
-        withContext(Dispatchers.Main) {
-            ConfirmationOverlay().setType(ConfirmationOverlay.OPEN_ON_PHONE_ANIMATION)
-                .setMessage(activity.getString(R.string.message_continue_on_phone))
-                .showOn(activity)
-        }
     }
 }
 

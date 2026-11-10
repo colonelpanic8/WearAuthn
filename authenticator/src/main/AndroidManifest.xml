@@ -67,12 +67,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="me.henneke.wearauthn.ui.main.AuthenticatorAttachedActivity"
-            android:taskAffinity=".ui.main.AuthenticatorActivity" />
-        <activity
-            android:name="me.henneke.wearauthn.ui.main.AboutActivity"
-            android:taskAffinity=".ui.main.AuthenticatorActivity" />
-        <activity
             android:name="me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity"
             android:excludeFromRecents="true"
             android:showWhenLocked="true"
@@ -156,9 +150,6 @@
                 <category android:name="android.support.wearable.complications.category.PROVIDER_CONFIG" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.main.ResidentCredentialsList"
-            android:taskAffinity=".ui.main.AuthenticatorActivity" />
 
         <service
             android:name="me.henneke.wearauthn.sync.UnlockComplicationListenerService"
