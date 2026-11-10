@@ -537,16 +537,16 @@ abstract class Credential {
         userVerified: Boolean,
         numberOfCredentials: Int?,
         userSelected: Boolean,
-        returnCredential: Boolean,
         context: AuthenticatorContext
     ): CborLongMap {
         val assertion = assert(clientDataHash, extensionOutputs, userPresent, userVerified, context)
+        // CTAP 2.0 let this be omitted for an allow list of one, but CTAP 2.1 requires it and
+        // clients such as python-fido2 reject a response without it.
         val resultMap = mutableMapOf<Long, CborValue>(
+            GET_ASSERTION_RESPONSE_CREDENTIAL to toCborCredential(),
             GET_ASSERTION_RESPONSE_AUTH_DATA to CborByteString(assertion.authenticatorData),
             GET_ASSERTION_RESPONSE_SIGNATURE to CborByteString(assertion.signature)
         )
-        if (returnCredential)
-            resultMap[GET_ASSERTION_RESPONSE_CREDENTIAL] = toCborCredential()
         val usesMultipleResidentKeys = numberOfCredentials != 1
         check(usesMultipleResidentKeys implies isResident)
         if (isResident) {

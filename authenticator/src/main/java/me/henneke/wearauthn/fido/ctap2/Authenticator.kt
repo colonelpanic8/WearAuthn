@@ -507,7 +507,6 @@ object Authenticator : Logging {
                         userSelected = false,
                         // The credential ID must be returned unless the allow list contains exactly
                         // one credential.
-                        returnCredential = allowList?.size != 1,
                         context = context
                     )
                 }.iterator()
@@ -542,7 +541,6 @@ object Authenticator : Logging {
                 userSelected = credentialsToUse.size > 1,
                 // The credential ID must be returned unless the allow list contains exactly one
                 // credential.
-                returnCredential = allowList?.size != 1,
                 context = context
             )
         }
