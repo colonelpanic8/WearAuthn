@@ -57,11 +57,11 @@
     <string name="session_timeout_until_turned_off">No time limit</string>
     <string name="preference_end_session_off_wrist_key" translatable="false">preference_end_session_off_wrist</string>
     <string name="preference_end_session_off_wrist_title">Only while worn</string>
-    <string name="preference_end_session_off_wrist_summary_on">Computers lose access when you take the watch off</string>
-    <string name="preference_end_session_off_wrist_summary_off">Computers keep access when you take the watch off</string>
+    <string name="preference_end_session_off_wrist_summary_on">Ends when taken off</string>
+    <string name="preference_end_session_off_wrist_summary_off">Continues off the wrist</string>
     <string name="preference_phone_always_ready_key" translatable="false">preference_phone_always_ready</string>
-    <string name="preference_phone_always_ready_summary_on">No need to open this app first</string>
-    <string name="preference_phone_always_ready_summary_off">Open this app first</string>
+    <string name="preference_phone_always_ready_summary_on">Always ready</string>
+    <string name="preference_phone_always_ready_summary_off">Open the app first</string>
     <string name="notification_phone_title">Ready for your phone</string>
     <string name="notification_channel_prompt">Security key requests</string>
     <string name="notification_prompt_title">Security key request – tap to review</string>
@@ -103,7 +103,7 @@
     <string name="passkey_delete_title">Delete this passkey?</string>
     <string name="settings_title">Settings</string>
     <string name="settings_stay_ready">Stay ready</string>
-    <string name="settings_phone_always_ready">Phone always ready</string>
+    <string name="settings_phone">Phone</string>
     <string name="about_version">Version %1$s</string>
     <plurals name="home_passkeys_count">
         <item quantity="one">%d on this watch</item>

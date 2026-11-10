@@ -48,7 +48,7 @@ In order to use WearAuthn with a Bluetooth-capable device, pair the device with 
 
 Computers can only use WearAuthn while a session is running. Opening the app starts a session and reattaches to the device you used last. The session keeps running after you leave the app, and requests show up on top of whatever is on screen. It ends once no request has arrived for the time set under "Settings" → "Stay ready" (15 minutes by default, up to 12 hours or no limit at all), when you take the watch off your wrist, when you tap "Turn off" in its notification, or when Bluetooth is turned off. Turn off "Only while worn" to keep a session running after the watch leaves your wrist. Between sessions the watch does not page or stay connected to any computer, because that is what costs battery.
 
-A paired phone can reach WearAuthn at any time while "Phone always ready" is on, which is the default. This starts a background service at boot that only waits for the phone to ask. The phone is connected to the watch anyway, so waiting uses no extra radio time. With the setting off, the phone can only ask during a session, and nothing runs between sessions.
+A paired phone can reach WearAuthn at any time while "Settings" → "Phone" is on, which is the default. This starts a background service at boot that only waits for the phone to ask. The phone is connected to the watch anyway, so waiting uses no extra radio time. With the setting off, the phone can only ask during a session, and nothing runs between sessions.
 
 ### NFC
 

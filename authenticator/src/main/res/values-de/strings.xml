@@ -53,10 +53,10 @@
     <string name="session_timeout_twelve_hours">12 Stunden</string>
     <string name="session_timeout_until_turned_off">Ohne Zeitlimit</string>
     <string name="preference_end_session_off_wrist_title">Nur beim Tragen</string>
-    <string name="preference_end_session_off_wrist_summary_on">Computer verlieren den Zugriff, wenn du die Uhr ablegst</string>
-    <string name="preference_end_session_off_wrist_summary_off">Computer behalten den Zugriff, wenn du die Uhr ablegst</string>
-    <string name="preference_phone_always_ready_summary_on">Ohne diese App vorher zu öffnen</string>
-    <string name="preference_phone_always_ready_summary_off">Diese App vorher öffnen</string>
+    <string name="preference_end_session_off_wrist_summary_on">Endet beim Ablegen</string>
+    <string name="preference_end_session_off_wrist_summary_off">Läuft abgelegt weiter</string>
+    <string name="preference_phone_always_ready_summary_on">Immer bereit</string>
+    <string name="preference_phone_always_ready_summary_off">App zuerst öffnen</string>
     <string name="notification_phone_title">Bereit für dein Telefon</string>
     <string name="notification_channel_prompt">Sicherheitsschlüssel-Anfragen</string>
     <string name="notification_prompt_title">Sicherheitsschlüssel-Anfrage – zum Prüfen tippen</string>
@@ -98,7 +98,7 @@
     <string name="passkey_delete_title">Diesen Passkey löschen?</string>
     <string name="settings_title">Einstellungen</string>
     <string name="settings_stay_ready">Bereit bleiben</string>
-    <string name="settings_phone_always_ready">Immer für Telefon bereit</string>
+    <string name="settings_phone">Telefon</string>
     <string name="about_version">Version %1$s</string>
     <plurals name="home_passkeys_count">
         <item quantity="one">%d auf dieser Uhr</item>

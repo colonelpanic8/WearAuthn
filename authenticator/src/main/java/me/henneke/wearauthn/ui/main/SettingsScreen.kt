@@ -5,11 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.foundation.lazy.TransformingLazyColumnItemScope
 import androidx.wear.compose.material3.RadioButton
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.SwitchButton
 import androidx.wear.compose.material3.Text
+import androidx.wear.compose.material3.lazy.TransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import me.henneke.wearauthn.LogLevel
 import me.henneke.wearauthn.R
@@ -24,6 +25,7 @@ import me.henneke.wearauthn.ui.components.ScreenTitle
 /** [logLevel] is null unless developer options are on. */
 data class SettingsState(
     val sessionTimeout: SessionTimeout,
+    val onlyWhileWorn: Boolean,
     val phoneAlwaysReady: Boolean,
     val logLevel: LogLevel?,
 )
@@ -32,6 +34,7 @@ data class SettingsState(
 fun SettingsScreen(
     state: SettingsState,
     onOpenSessionTimeout: () -> Unit,
+    onOnlyWhileWornChange: (Boolean) -> Unit,
     onPhoneAlwaysReadyChange: (Boolean) -> Unit,
     onOpenLogLevel: () -> Unit,
     onOpenAbout: () -> Unit,
@@ -48,21 +51,27 @@ fun SettingsScreen(
             )
         }
         item {
-            SwitchButton(
+            SettingSwitch(
+                checked = state.onlyWhileWorn,
+                onCheckedChange = onOnlyWhileWornChange,
+                spec = spec,
+                label = stringResource(R.string.preference_end_session_off_wrist_title),
+                secondaryLabel = stringResource(
+                    if (state.onlyWhileWorn) R.string.preference_end_session_off_wrist_summary_on
+                    else R.string.preference_end_session_off_wrist_summary_off
+                ),
+            )
+        }
+        item {
+            SettingSwitch(
                 checked = state.phoneAlwaysReady,
                 onCheckedChange = onPhoneAlwaysReadyChange,
-                modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
-                transformation = SurfaceTransformation(spec),
-                icon = { Icon(painterResource(R.drawable.ic_phone), contentDescription = null) },
-                secondaryLabel = {
-                    Text(
-                        stringResource(
-                            if (state.phoneAlwaysReady) R.string.preference_phone_always_ready_summary_on
-                            else R.string.preference_phone_always_ready_summary_off
-                        )
-                    )
-                },
-                label = { Text(stringResource(R.string.settings_phone_always_ready)) },
+                spec = spec,
+                label = stringResource(R.string.settings_phone),
+                secondaryLabel = stringResource(
+                    if (state.phoneAlwaysReady) R.string.preference_phone_always_ready_summary_on
+                    else R.string.preference_phone_always_ready_summary_off
+                ),
             )
         }
         if (state.logLevel != null) {
@@ -85,6 +94,25 @@ fun SettingsScreen(
             )
         }
     }
+}
+
+/** Without an icon, so that the label keeps to one line next to the switch. */
+@Composable
+private fun TransformingLazyColumnItemScope.SettingSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    spec: TransformationSpec,
+    label: String,
+    secondaryLabel: String,
+) {
+    SwitchButton(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+        transformation = SurfaceTransformation(spec),
+        secondaryLabel = { Text(secondaryLabel) },
+        label = { Text(label) },
+    )
 }
 
 /** One radio row per option, with an optional note below them. */
@@ -141,8 +169,14 @@ fun LogLevelPickerScreen(selected: LogLevel, onSelect: (LogLevel) -> Unit) =
 @Composable
 fun Settings() = WatchPreviewFrame {
     SettingsScreen(
-        state = SettingsState(SessionTimeout.FIFTEEN_MINUTES, phoneAlwaysReady = true, LogLevel.Info),
+        state = SettingsState(
+            SessionTimeout.FIFTEEN_MINUTES,
+            onlyWhileWorn = true,
+            phoneAlwaysReady = true,
+            logLevel = LogLevel.Info,
+        ),
         onOpenSessionTimeout = {},
+        onOnlyWhileWornChange = {},
         onPhoneAlwaysReadyChange = {},
         onOpenLogLevel = {},
         onOpenAbout = {},

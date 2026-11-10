@@ -139,6 +139,13 @@ class HomeViewModel(application: Application) :
         _settings.value = readSettings()
     }
 
+    fun setOnlyWhileWorn(enabled: Boolean) {
+        context.defaultSharedPreferences.edit {
+            putBoolean(context.getString(R.string.preference_end_session_off_wrist_key), enabled)
+        }
+        _settings.value = readSettings()
+    }
+
     fun setPhoneAlwaysReady(enabled: Boolean) {
         context.defaultSharedPreferences.edit(commit = true) {
             putBoolean(context.getString(R.string.preference_phone_always_ready_key), enabled)
@@ -288,6 +295,10 @@ class HomeViewModel(application: Application) :
         return SettingsState(
             sessionTimeout = SessionTimeout.fromPreference(
                 prefs.getString(context.getString(R.string.preference_session_timeout_key), null)
+            ),
+            onlyWhileWorn = prefs.getBoolean(
+                context.getString(R.string.preference_end_session_off_wrist_key),
+                context.resources.getBoolean(R.bool.default_end_session_off_wrist)
             ),
             phoneAlwaysReady = AuthenticatorService.isAlwaysReadyForPhone(context),
             logLevel = if (context.isDeveloperModeEnabled) {

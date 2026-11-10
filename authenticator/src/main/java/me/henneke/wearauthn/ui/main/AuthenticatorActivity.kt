@@ -206,6 +206,7 @@ class AuthenticatorActivity : ComponentActivity() {
                 SettingsScreen(
                     state = settings,
                     onOpenSessionTimeout = { navController.navigate(ROUTE_SESSION_TIMEOUT) },
+                    onOnlyWhileWornChange = viewModel::setOnlyWhileWorn,
                     onPhoneAlwaysReadyChange = viewModel::setPhoneAlwaysReady,
                     onOpenLogLevel = { navController.navigate(ROUTE_LOG_LEVEL) },
                     onOpenAbout = { navController.navigate(ROUTE_ABOUT) },
