@@ -285,25 +285,37 @@ private fun Site(site: String, maxFontSize: TextUnit = 24.sp) {
     )
 }
 
-/** The largest size at which a [breakableHost] fits and every line ends after a dot. */
+/**
+ * The largest size at which a [breakableHost] fits and every line ends after a dot. It takes a
+ * third line only once two would need a size below [TWO_LINE_MIN_SP], so that a long host leaves
+ * room for the account under it.
+ */
 private data class HostAutoSize(val minFontSize: TextUnit, val maxFontSize: TextUnit) : TextAutoSize {
     override fun TextAutoSizeLayoutScope.getFontSize(
         constraints: Constraints,
         text: AnnotatedString,
     ): TextUnit {
-        var size = maxFontSize.value
-        while (size > minFontSize.value) {
+        fun fits(size: Float, maxLines: Int): Boolean {
             val layout = performLayout(constraints, text, size.sp)
             val breaksAfterDots = (0 until layout.lineCount - 1).all { line ->
                 text.getOrNull(layout.getLineEnd(line) - 1) == '\u200B'
             }
-            if (!layout.hasVisualOverflow && breaksAfterDots)
-                return size.sp
-            size -= 1f
+            return !layout.hasVisualOverflow && breaksAfterDots && layout.lineCount <= maxLines
         }
-        return minFontSize
+
+        fun largest(floor: Float, maxLines: Int): Float? =
+            generateSequence(maxFontSize.value) { it - 1f }
+                .takeWhile { it >= floor }
+                .firstOrNull { fits(it, maxLines) }
+
+        val size = largest(maxOf(TWO_LINE_MIN_SP, minFontSize.value), maxLines = 2)
+            ?: largest(minFontSize.value, maxLines = 3)
+            ?: minFontSize.value
+        return size.sp
     }
 }
+
+private const val TWO_LINE_MIN_SP = 16f
 
 @Composable
 private fun SignInPreview() = DialogPreviewFrame {
