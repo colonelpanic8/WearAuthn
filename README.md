@@ -44,11 +44,11 @@ WearAuthn can be used as a security key for your devices either via Bluetooth or
 
 ### Bluetooth
 
-In order to use WearAuthn with a Bluetooth-capable device, simply pair the device once from your watch's Bluetooth settings. Afterwards, launch WearAuthn and tap on your device in the list of paired Bluetooth devices. Once WearAuthn is "attached", the device will behave as if a USB security key were attached to it.
+In order to use WearAuthn with a Bluetooth-capable device, pair the device with your watch once: tap "Pair a computer" in WearAuthn, which makes the watch visible for a minute, and add it as a Bluetooth device on the computer. Afterwards, tap the computer under "Computers" on WearAuthn's home screen. Once the home screen says "Attached", the computer will behave as if a USB security key were plugged into it. Tap the attached computer again to detach it.
 
-Computers can only use WearAuthn while a session is running. Opening the app starts a session and reattaches to the device you used last. The session keeps running after you leave the app, and requests show up on top of whatever is on screen. It ends once no request has arrived for the time set under "Stay ready for computers" (15 minutes by default, up to 12 hours or no limit at all), when you take the watch off your wrist, when you tap "Turn off" in its notification, or when Bluetooth is turned off. Turn off "Only while worn" to keep a session running after the watch leaves your wrist. Between sessions the watch does not page or stay connected to any computer, because that is what costs battery.
+Computers can only use WearAuthn while a session is running. Opening the app starts a session and reattaches to the device you used last. The session keeps running after you leave the app, and requests show up on top of whatever is on screen. It ends once no request has arrived for the time set under "Settings" → "Stay ready" (15 minutes by default, up to 12 hours or no limit at all), when you take the watch off your wrist, when you tap "Turn off" in its notification, or when Bluetooth is turned off. Turn off "Only while worn" to keep a session running after the watch leaves your wrist. Between sessions the watch does not page or stay connected to any computer, because that is what costs battery.
 
-A paired phone can reach WearAuthn at any time while "Always ready for phone" is on, which is the default. This starts a background service at boot that only waits for the phone to ask. The phone is connected to the watch anyway, so waiting uses no extra radio time. With the setting off, the phone can only ask during a session, and nothing runs between sessions.
+A paired phone can reach WearAuthn at any time while "Phone always ready" is on, which is the default. This starts a background service at boot that only waits for the phone to ask. The phone is connected to the watch anyway, so waiting uses no extra radio time. With the setting off, the phone can only ask during a session, and nothing runs between sessions.
 
 ### NFC
 
@@ -62,7 +62,7 @@ Due to security restrictions imposed on third-party apps by Wear OS, WearAuthn i
 
 No setup required and fully supported by Chrome, Edge and Firefox on Windows 10 Version 1809 and later.
 
-If you have WearAuthn's single-factor mode enabled and are using Chrome or Edge, you can even [log in to your Microsoft account with a single tap on your watch](https://support.microsoft.com/en-us/help/4463210/windows-10-sign-in-microsoft-account-windows-hello-security-key).
+If you have turned on WearAuthn's passkeys and are using Chrome or Edge, you can even [log in to your Microsoft account with a single tap on your watch](https://support.microsoft.com/en-us/help/4463210/windows-10-sign-in-microsoft-account-windows-hello-security-key).
 
 ### macOS (Bluetooth)
 
@@ -116,15 +116,15 @@ Since WearAuthn is just an app running on a full-fledged smartwatch OS, it is ce
 
 WearAuthn will use the Android Keystore system to store the private keys associated with your registrations, which may or may not mean that your keys are stored in secure hardware that is part of your watch. Even if they were, if someone were to exploit a vulnerability in Wear OS and remotely root your watch, they would always be able to freely use all your private keys without a chance for you to notice.
 
-You can find out whether WearAuthn stores your keys in a dedicated hardware module by launching the "About" screen from WearAuthn's main menu and scrolling down to a line that starts with "Key storage:". If it says "Hardware", then your keys are stored in a Trusted Execution Environment (TEE) integrated in your watch, which means that Google asserts that it believes the extraction of the key material (but of course not its use) to be not possible remotely.
+You can find out whether WearAuthn stores your keys in a dedicated hardware module by opening "Settings" → "About" in WearAuthn and looking for the line that starts with "Credential storage:". If it says "Hardware", then your keys are stored in a Trusted Execution Environment (TEE) integrated in your watch, which means that Google asserts that it believes the extraction of the key material (but of course not its use) to be not possible remotely.
 
 ## Privacy policy
 
-The WearAuthn privacy policy can be accessed [here](PRIVACY.md) or from the apps "About" screen.
+The WearAuthn privacy policy can be accessed [here](PRIVACY.md) or from the app's "About" screen.
 
 ## Code
 
-WearAuthn is open source[<sup>1</sup>](#footnote) and available under the terms of the [MIT license](LICENSE). Some parts of the code were modified from the Android Open Source Project (also see the [NOTICE](NOTICE)) and are marked with their original license terms.
+WearAuthn is open source[<sup>1</sup>](#footnote) and available under the terms of the [MIT license](LICENSE). Some parts of the code were modified from Google's [WearMouse](https://github.com/ginkage/wearmouse) and some icons from the Material Design Icons (also see the [NOTICE](NOTICE)); they are marked with their original license terms.
 
 Pull requests and feature suggestions are very welcome!
 
@@ -140,7 +140,7 @@ The code is structured as follows:
     - [`nfc`](authenticator/src/main/java/me/henneke/wearauthn/fido/nfc): Implementation of the NFC transport for U2F and CTAP2; uses [Android host-based card emulation](https://developer.android.com/guide/topics/connectivity/nfc/hce) which is also available on Google Pay-enabled Wear OS watches
     - [`u2f`](authenticator/src/main/java/me/henneke/wearauthn/fido/u2f): Implementation of the U2F (CTAP1) protocol for backwards compatibility; nowadays mostly used via NFC
   - [`sync`](authenticator/src/main/java/me/henneke/wearauthn/sync): Synchronization with the phone app, currently only used to keep track of the complication unlock
-  - [`ui`](authenticator/src/main/java/me/henneke/wearauthn/ui): Authenticator UI classes, such as the timed confirmation dialog and device list
+  - [`ui`](authenticator/src/main/java/me/henneke/wearauthn/ui): The watch UI in Jetpack Compose for Wear OS: the home screen with its list of computers, the confirmation prompts, settings, passkeys and the reset flow. `just screenshots` renders every screen's previews to PNG
 - [`companion`](companion) (Android app module): phone app with in-app purchase for unlocking the watch face complication
 - [`metadata`](metadata): FIDO Authenticator Metadata for WearAuthn, which describes its features and can be used to run conformance tests
 

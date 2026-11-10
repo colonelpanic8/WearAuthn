@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.ResultReceiver
-import android.support.wearable.activity.WearableActivity
 import androidx.annotation.MainThread
 
 private const val EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER =
@@ -17,7 +16,7 @@ private const val EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER =
 private const val REQUEST_CONFIRM_CREDENTIAL = 5
 private const val STATE_LAUNCHED = "launched"
 
-class ConfirmDeviceCredentialActivity : WearableActivity() {
+class ConfirmDeviceCredentialActivity : Activity() {
 
     private var launched = false
     private var resultSent = false

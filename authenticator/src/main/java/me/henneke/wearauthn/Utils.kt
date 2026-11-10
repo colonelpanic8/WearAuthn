@@ -1,6 +1,5 @@
 package me.henneke.wearauthn
 
-import android.text.TextUtils
 import android.util.Base64
 import com.google.android.gms.common.util.Hex
 import java.nio.ByteBuffer
@@ -69,8 +68,6 @@ fun ByteArray.decodeToStringOrNull(): String? = try {
     } catch (ex: CharacterCodingException) {
         null
     }
-
-fun String.escapeHtml(): String = TextUtils.htmlEncode(this)
 
 fun String.truncate(targetLength: Int): String =
     if (length > targetLength) this.take(targetLength - 1) + "…" else this

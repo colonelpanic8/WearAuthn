@@ -1,7 +1,8 @@
-This project uses code from the Android Open Source Project, which includes
-the following NOTICE:
+This project uses code from WearMouse and icons based on the Material Design
+Icons, which come with the following copyright notices:
 
-   Copyright (c) 2005-2008, The Android Open Source Project
+   Copyright 2018 Google LLC (WearMouse)
+   Copyright Google LLC (Material Design Icons)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
