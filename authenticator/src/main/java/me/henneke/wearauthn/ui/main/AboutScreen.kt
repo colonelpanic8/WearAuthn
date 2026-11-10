@@ -52,7 +52,7 @@ fun AboutScreen(
             Text(
                 styledStringResource(R.string.about_how_to_use),
                 modifier = Modifier.fillMaxWidth().transformedHeight(this, spec)
-                    .padding(horizontal = 18.dp, vertical = 8.dp),
+                    .padding(horizontal = LONG_TEXT_INSET, vertical = 8.dp),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -89,6 +89,9 @@ fun AboutScreen(
     }
 }
 
+// Left-aligned paragraphs run into the round bezel at the list's usual inset.
+private val LONG_TEXT_INSET = 30.dp
+
 /** A title over long plain text, such as the privacy policy. */
 @Composable
 fun TextScreen(title: String, text: String) {
@@ -98,7 +101,7 @@ fun TextScreen(title: String, text: String) {
             Text(
                 AnnotatedString(text),
                 modifier = Modifier.fillMaxWidth().transformedHeight(this, spec)
-                    .padding(horizontal = 18.dp),
+                    .padding(horizontal = LONG_TEXT_INSET),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
