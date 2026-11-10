@@ -143,22 +143,13 @@ fun TransactionScreen(
 }
 
 @Composable
-fun ChooseAccountScreen(site: String?, accounts: List<AccountChoice>, onChoose: (Int) -> Unit) {
+fun ChooseAccountScreen(site: String, accounts: List<AccountChoice>, onChoose: (Int) -> Unit) {
     val state = rememberTransformingLazyColumnState()
     val spec = rememberTransformationSpec()
     ScreenScaffold(scrollState = state) { padding ->
         TransformingLazyColumn(state = state, contentPadding = padding) {
-            item {
-                Secondary(
-                    stringResource(
-                        if (site != null) R.string.prompt_choose_account_for
-                        else R.string.prompt_choose_account
-                    )
-                )
-            }
-            if (site != null) {
-                item { Site(site, maxFontSize = 18.sp) }
-            }
+            item { Secondary(stringResource(R.string.prompt_choose_account_for)) }
+            item { Site(site, maxFontSize = 18.sp) }
             for ((index, account) in accounts.withIndex()) {
                 item {
                     ListButton(

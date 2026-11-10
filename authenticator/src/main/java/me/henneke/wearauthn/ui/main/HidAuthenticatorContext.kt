@@ -50,12 +50,14 @@ class HidAuthenticatorContext(
                 ?.let { lineBreaks -> prompt.breakAt(lineBreaks) }
         }
 
-    override suspend fun chooseAccount(credentials: List<WebAuthnCredential>): WebAuthnCredential? {
+    override suspend fun chooseAccount(
+        rpId: String,
+        credentials: List<WebAuthnCredential>,
+    ): WebAuthnCredential? {
         val accounts = credentials.mapIndexed { index, credential ->
             credential.getTwoLineInfo(index + 1).let { (title, subtitle) -> AccountChoice(title, subtitle) }
         }
-        val site = credentials.firstNotNullOfOrNull { it.rpName }
-        val index = ask(Prompt.ChooseAccount(site, accounts, CHOOSE_ACCOUNT_TIMEOUT_MS))
+        val index = ask(Prompt.ChooseAccount(rpId, accounts, CHOOSE_ACCOUNT_TIMEOUT_MS))
         return index?.let { credentials.getOrNull(it) }
     }
 

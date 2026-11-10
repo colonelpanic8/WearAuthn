@@ -111,7 +111,6 @@
     </plurals>
     <string name="prompt_as_account">as %1$s</string>
     <string name="prompt_choose_account_for">Choose an account for</string>
-    <string name="prompt_choose_account">Choose an account</string>
     <string name="reset_ask_title">Delete all credentials?</string>
     <string name="reset_ask_text">You lose access to accounts that have no other sign-in.</string>
     <string name="reset_confirm_title">Really delete everything?</string>

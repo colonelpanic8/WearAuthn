@@ -106,7 +106,6 @@
     </plurals>
     <string name="prompt_as_account">als %1$s</string>
     <string name="prompt_choose_account_for">Wähle einen Account für</string>
-    <string name="prompt_choose_account">Wähle einen Account</string>
     <string name="reset_ask_title">Alle Anmeldedaten löschen?</string>
     <string name="reset_ask_text">Du verlierst den Zugang zu Accounts, bei denen du dich nicht anders anmelden kannst.</string>
     <string name="reset_confirm_title">Wirklich alles löschen?</string>

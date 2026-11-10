@@ -188,9 +188,14 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
      */
     open val confirmsAbsentCredentials: Boolean = true
 
-    /** Asks the user which of [credentials] to use, or returns null if there is no one to ask. */
-    protected open suspend fun chooseAccount(credentials: List<WebAuthnCredential>): WebAuthnCredential? =
-        null
+    /**
+     * Asks the user which of the [credentials] for [rpId] to use, or returns null if there is no
+     * one to ask.
+     */
+    protected open suspend fun chooseAccount(
+        rpId: String,
+        credentials: List<WebAuthnCredential>,
+    ): WebAuthnCredential? = null
 
     // We use cached credentials only over NFC, where low latency responses are very important
     private val useCachedCredential = !isHidTransport
@@ -366,7 +371,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             status = AuthenticatorStatus.PROCESSING
     }
 
-    suspend fun chooseCredential(credentials: List<Credential>): Credential? {
+    suspend fun chooseCredential(rpId: String, credentials: List<Credential>): Credential? {
         check(isHidTransport)
         require(credentials.isNotEmpty())
         if (credentials.size == 1)
@@ -374,7 +379,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         // If there is more than one credential to choose from, all of them must be resident.
         require(credentials.all { it is WebAuthnCredential && it.isResident })
         status = AuthenticatorStatus.WAITING_FOR_UP
-        val credential = chooseAccount(credentials.map { it as WebAuthnCredential })
+        val credential = chooseAccount(rpId, credentials.map { it as WebAuthnCredential })
         status = AuthenticatorStatus.PROCESSING
         return credential
     }

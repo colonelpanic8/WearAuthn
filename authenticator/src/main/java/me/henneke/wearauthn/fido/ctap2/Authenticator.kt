@@ -522,7 +522,7 @@ object Authenticator : Logging {
                 }
             }
         } else {
-            val credential = context.chooseCredential(credentialsToUse)
+            val credential = context.chooseCredential(rpId, credentialsToUse)
                 ?: CTAP_ERR(OperationDenied)
             val extensionOutputs = processExtensions(
                 extensions = activeExtensions,

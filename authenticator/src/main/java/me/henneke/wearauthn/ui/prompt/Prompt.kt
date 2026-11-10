@@ -29,7 +29,7 @@ sealed interface Prompt<R> {
 
     /** Answered with the index of the chosen account, or null. */
     data class ChooseAccount(
-        val site: String?,
+        val site: String,
         val accounts: List<AccountChoice>,
         override val timeoutMs: Long,
     ) : Prompt<Int?> {
